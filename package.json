@@ -1,6 +1,6 @@
 {
   "name": "dce-expresskit",
-  "version": "4.0.0-beta.5",
+  "version": "4.0.0-beta.6",
   "description": "Shared functions, helpers, and tools for Harvard DCE Express-based servers",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
