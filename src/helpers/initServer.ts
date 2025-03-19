@@ -9,12 +9,10 @@ import {
   ErrorWithCode,
   ParamType,
   LogFunction,
+  LOG_REVIEW_ROUTE_PATH_PREFIX,
+  LOG_ROUTE_PATH,
+  LOG_REVIEW_STATUS_ROUTE,
 } from 'dce-reactkit';
-
-// Import internal constants of dce-reactkit
-import LOG_REVIEW_ROUTE_PATH_PREFIX from 'dce-reactkit/src/constants/LOG_REVIEW_ROUTE_PATH_PREFIX';
-import LOG_ROUTE_PATH from 'dce-reactkit/src/constants/LOG_ROUTE_PATH';
-import LOG_REVIEW_STATUS_ROUTE from 'dce-reactkit/src/constants/LOG_REVIEW_STATUS_ROUTE';
 
 // Import shared helpers
 import genRouteHandler from './genRouteHandler';
