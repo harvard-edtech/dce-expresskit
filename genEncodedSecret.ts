@@ -39,7 +39,7 @@ const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
   // Get salt
   console.log('Encoding salt on the *receiving* server')
-  const DCEKIT_CRED_ENCODING_SALT = await prompt('Salt: ');
+  const salt = await prompt('Salt: ');
 
   // Get host
   console.log('Hostname of the *receiving* server');
@@ -49,23 +49,19 @@ const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   console.log('This is the server that sends requests to the receiving server.\n');
 
   // Get key
-  console.log('Short unique key for the *sending* server')
-  const key = await prompt('Key: ');
+  console.log('Short unique key for the *sending* server (only letters and dashes, no whitespace)')
+  const key = (await prompt('Key: ')).trim();
 
   // Get description
   console.log('Human-readable description of the *sending* server')
   const description = await prompt('Description: ');
 
-  // Get secret
-  let secret = process.env.npm_config_secret;
-  if (!secret) {
-    // Generate a random secret
-    secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    console.log('Generated a random secret. If you have one in mind, use --secret=...');
+  // Generate a random secret
+  let secret = '';
+  for (let i = 0; i < 32; i++) {
+    secret += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  secret = Buffer.from(secret).toString('base64');
 
   // Encryption process based on:
   // https://medium.com/@tony.infisical/guide-to-nodes-crypto-module-for-encryption-decryption-65c077176980
@@ -74,9 +70,10 @@ const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const iv = crypto.randomBytes(12).toString('base64');
 
   // Create a cipher
+  console.log('salt', salt, Buffer.from(salt, 'base64'));
   const cipher = crypto.createCipheriv(
     'aes-256-gcm',
-    Buffer.from(secret, 'base64'),
+    Buffer.from(salt, 'base64'),
     Buffer.from(iv, 'base64'),
   );
 
@@ -100,7 +97,7 @@ const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   console.log('\n\n');
   console.log('––––– Done! What\'s Next: –––––');
   console.log('');
-  console.log('On the *sending* server, append the following to the DCEKIT_CROSS_SERVER_CREDENTIALS env var:');
+  console.log('On the *sending* server, !!APPEND!! the following to the DCEKIT_CROSS_SERVER_CREDENTIALS env var:');
   console.log(`|${host}:${key}:${secret}|`);
   console.log('');
   console.log('On the *receiving* server, add an entry to its "CrossServerCredential" collection:');

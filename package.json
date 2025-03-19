@@ -6,7 +6,8 @@
   "types": "./lib/index.d.ts",
   "scripts": {
     "build": "tsc --project ./tsconfig.json",
-    "gen-cross-server-secret": "npx tsx genEncodedSecret.ts"
+    "gen-cross-server-secret": "npx tsx genEncodedSecret.ts",
+    "gen-cross-server-salt": "npx tsx genSalt.ts"
   },
   "repository": {
     "type": "git",
