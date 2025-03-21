@@ -171,6 +171,8 @@ export const signRequest = async (
 
   // Add signature to the augmented params
   augmentedParams.oauth_signature = signature;
+  console.log('Signature generation:', method, path, params, secret);
+
 
   // Return the augmented params
   return augmentedParams;
@@ -259,7 +261,6 @@ export const validateSignedRequest = async (
 
   // Make sure the scope is included
   const allowedScopes = crossServerCredential.scopes;
-  console.log('Scope:', scope, 'Allowed Scopes:', allowedScopes);
   if (!allowedScopes || !Array.isArray(allowedScopes)) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the credential does not have access to any scopes.',
@@ -286,6 +287,7 @@ export const validateSignedRequest = async (
     params,
     secret,
   });
+  console.log('expectedSignature', expectedSignature, method, path, params, secret);
 
   // Make sure the signatures match
   if (signature !== expectedSignature) {
