@@ -12,6 +12,7 @@ import {
   LOG_REVIEW_ROUTE_PATH_PREFIX,
   LOG_ROUTE_PATH,
   LOG_REVIEW_STATUS_ROUTE,
+  Log,
 } from 'dce-reactkit';
 
 // Import shared helpers
@@ -19,12 +20,13 @@ import genRouteHandler from './genRouteHandler';
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
+import CrossServerCredential from '../types/CrossServerCredential';
 
 // Stored copy of dce-mango log collection
-let _logCollection: any;
+let _logCollection: Collection<Log>;
 
 // Stored copy of dce-mango cross-server credential collection
-let _crossServerCredentialCollection: any;
+let _crossServerCredentialCollection: Collection<CrossServerCredential>;
 
 /*------------------------------------------------------------------------*/
 /*                                 Helpers                                */
@@ -78,8 +80,8 @@ const initServer = (
   opts: {
     app: express.Application,
     logReviewAdmins?: (number[] | Collection<any>),
-    logCollection?: Collection<any>,
-    crossServerCredentialCollection?: Collection<any>,
+    logCollection?: Collection<Log>,
+    crossServerCredentialCollection?: Collection<CrossServerCredential>,
   },
 ) => {
   _logCollection = opts.logCollection;

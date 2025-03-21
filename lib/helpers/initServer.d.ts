@@ -1,19 +1,21 @@
 import express from 'express';
 import { Collection } from 'dce-mango';
+import { Log } from 'dce-reactkit';
+import CrossServerCredential from '../types/CrossServerCredential';
 /**
  * Get log collection
  * @author Gabe Abrams
  * @returns log collection if one was included during launch or null if we don't
  *   have a log collection (yet)
  */
-export declare const internalGetLogCollection: () => any;
+export declare const internalGetLogCollection: () => Collection<Log>;
 /**
  * Get cross-server credential collection
  * @author Gabe Abrams
  * @return cross-server credential collection if one was included during launch or null
  *   if we don't have a cross-server credential collection (yet)
  */
-export declare const internalGetCrossServerCredentialCollection: () => any;
+export declare const internalGetCrossServerCredentialCollection: () => Collection<CrossServerCredential>;
 /**
  * Prepare dce-reactkit to run on the server
  * @author Gabe Abrams
@@ -37,7 +39,7 @@ export declare const internalGetCrossServerCredentialCollection: () => any;
 declare const initServer: (opts: {
     app: express.Application;
     logReviewAdmins?: (number[] | Collection<any>);
-    logCollection?: Collection<any>;
-    crossServerCredentialCollection?: Collection<any>;
+    logCollection?: Collection<Log>;
+    crossServerCredentialCollection?: Collection<CrossServerCredential>;
 }) => void;
 export default initServer;
