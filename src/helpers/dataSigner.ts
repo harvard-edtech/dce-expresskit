@@ -310,8 +310,7 @@ export const validateSignedRequest = async (
 
   // Make sure the timestamp was recent enough
   const elapsedMs = Math.abs(Date.now() - timestamp);
-  console.log('elapsedMs', elapsedMs, timestamp, Date.now());
-  if (elapsedMs < MINUTE_IN_MS) {
+  if (elapsedMs > MINUTE_IN_MS) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the request was too old.',
       ExpressKitErrorCode.SignedRequestInvalidTimestamp,
