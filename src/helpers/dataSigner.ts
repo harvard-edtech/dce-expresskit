@@ -62,7 +62,6 @@ const genSignature = async (
     // Add the param
     orderedParams[key] = (params ?? {})[key];
   });
-  console.log('Ordered:', orderedParams);
 
   // Generate the signature
   return decodeURIComponent(oauth.generate(
@@ -294,7 +293,6 @@ export const validateSignedRequest = async (
   });
 
   // Generate a new signature to compare
-  console.log('paramsToSign', method, path, paramsToSign, secret);
   const expectedSignature = await genSignature({
     method,
     path,
