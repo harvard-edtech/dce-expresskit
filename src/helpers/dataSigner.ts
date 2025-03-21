@@ -171,7 +171,6 @@ export const signRequest = async (
 
   // Add signature to the augmented params
   augmentedParams.oauth_signature = signature;
-  console.log('Signature generation:', method, path, params, secret);
 
 
   // Return the augmented params
@@ -300,7 +299,6 @@ export const validateSignedRequest = async (
     params: paramsToSign,
     secret,
   });
-  console.log('expectedSignature', expectedSignature, method, path, paramsToSign, secret);
 
   // Make sure the signatures match
   if (signature !== expectedSignature) {
@@ -312,6 +310,7 @@ export const validateSignedRequest = async (
 
   // Make sure the timestamp was recent enough
   const elapsedMs = Math.abs(Date.now() - timestamp);
+  console.log('elapsedMs', elapsedMs, timestamp, Date.now());
   if (elapsedMs < MINUTE_IN_MS) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the request was too old.',
