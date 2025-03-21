@@ -257,6 +257,7 @@ export const validateSignedRequest = async (
 
   // Make sure the scope is included
   const allowedScopes = crossServerCredential.scopes;
+  console.log('Key', key, 'Credential', crossServerCredential, 'Scopes', allowedScopes);
   if (!allowedScopes.includes(opts.scope)) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the scope was not included.',
