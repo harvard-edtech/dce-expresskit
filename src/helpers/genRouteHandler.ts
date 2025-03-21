@@ -153,15 +153,21 @@ const genRouteHandler = (
 
     if (crossServerScope) {
       try {
+        // Create params to sign (specifically exclude path params)
+        const paramsToSign = {
+          ...req.body,
+          ...req.query,
+        };
+
         // Validate the request body
         await validateSignedRequest({
           method: req.method ?? 'GET',
           path: req.path,
           scope: crossServerScope,
-          params: requestBody,
+          params: paramsToSign,
         });
 
-        // Valid! Remove oauth values
+        // Valid! Remove oauth values because they're no longer needed, and shouldn't be passed to the handler
         Object.keys(requestBody).forEach((key) => {
           if (key.startsWith('oauth_')) {
             delete requestBody[key];

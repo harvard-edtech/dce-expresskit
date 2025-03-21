@@ -280,14 +280,27 @@ export const validateSignedRequest = async (
 
   /* -------- Verify Signature -------- */
 
+  // Curate what goes into the params
+  const paramsToSign: {
+    [key: string]: any,
+  } = {
+    ...params,
+  };
+  Object.keys(paramsToSign).forEach((key) => {
+    // Delete oauth params
+    if (key.startsWith('oauth_')) {
+      delete paramsToSign[key];
+    }
+  });
+
   // Generate a new signature to compare
   const expectedSignature = await genSignature({
     method,
     path,
-    params,
+    params: paramsToSign,
     secret,
   });
-  console.log('expectedSignature', expectedSignature, method, path, params, secret);
+  console.log('expectedSignature', expectedSignature, method, path, paramsToSign, secret);
 
   // Make sure the signatures match
   if (signature !== expectedSignature) {
