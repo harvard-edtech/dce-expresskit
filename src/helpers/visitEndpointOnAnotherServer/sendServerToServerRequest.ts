@@ -6,8 +6,86 @@ import {
   ErrorWithCode,
 } from 'dce-reactkit';
 
+// Import data signer
+import { signRequest } from '../dataSigner';
+
 // Import shared types
 import ExpressKitErrorCode from '../../types/ExpressKitErrorCode';
+
+/*------------------------------------------------------------------------*/
+/* ----------------------------- Credentials ---------------------------- */
+/*------------------------------------------------------------------------*/
+
+/*
+DCEKIT_CROSS_SERVER_CREDENTIALS format:
+|host:key:secret||host:key:secret|...
+*/
+
+const credentials: {
+  host: string,
+  key: string,
+  secret: string,
+}[] = (
+    (process.env.DCEKIT_CROSS_SERVER_CREDENTIALS ?? '')
+      // Replace multiple | with a single one
+      .replace(/\|+/g, '|')
+      // Split by |
+      .split('|')
+      // Remove empty strings
+      .filter((str) => {
+        return str.trim().length > 0;
+      })
+      // Process each credential
+      .map((str) => {
+        // Split by :
+        const parts = str.split(':');
+
+        // Check for errors
+        if (parts.length !== 3) {
+          throw new ErrorWithCode(
+            'Invalid DCEKIT_CROSS_SERVER_CREDENTIALS format. Each credential must be in the format |host:key:secret|',
+            ExpressKitErrorCode.InvalidCrossServerCredentialsFormat,
+          );
+        }
+
+        // Return the credential
+        return {
+          host: parts[0].trim(),
+          key: parts[1].trim(),
+          secret: parts[2].trim(),
+        };
+      })
+  );
+
+/*------------------------------------------------------------------------*/
+/* ------------------------------- Helpers ------------------------------ */
+/*------------------------------------------------------------------------*/
+
+/**
+ * Get the credential to use for the request to another server
+ * @author Gabe Abrams
+ * @param host the host of the other server
+ * @return the credential to use
+ */
+const getCrossServerCredential = (host: string) => {
+  // Find the credential
+  const credential = credentials.find((cred) => {
+    return cred.host.toLowerCase() === host.toLowerCase();
+  });
+  if (!credential) {
+    throw new ErrorWithCode(
+      'Cannot send cross-server signed request there was no credential that matched the host that the request is being sent to.',
+      ExpressKitErrorCode.CrossServerNoCredentialsToSignWith,
+    );
+  }
+
+  // Return credential
+  return credential;
+};
+
+/*------------------------------------------------------------------------*/
+/* -------------------------------- Main -------------------------------- */
+/*------------------------------------------------------------------------*/
 
 /**
  * Sends and retries an http request
@@ -51,11 +129,26 @@ const sendServerToServerRequest = async (
     });
   }
 
-  // Stringify parameters
-  const stringifiedParams = qs.stringify(params || {}, {
-    encodeValuesOnly: true,
-    arrayFormat: 'brackets',
+  // Get cross-server credential
+  const credential = getCrossServerCredential(opts.host);
+
+  // Sign the request, get new params
+  const augmentedParams = await signRequest({
+    method: opts.method,
+    path: opts.path,
+    params: opts.params ?? {},
+    key: credential.key,
+    secret: credential.secret,
   });
+
+  // Stringify parameters
+  const stringifiedParams = qs.stringify(
+    augmentedParams || {},
+    {
+      encodeValuesOnly: true,
+      arrayFormat: 'brackets',
+    },
+  );
 
   // Create url (include query if GET)
   const query = (method === 'GET' ? `?${stringifiedParams}` : '');
@@ -79,14 +172,14 @@ const sendServerToServerRequest = async (
     data = (method !== 'GET' ? stringifiedParams : null);
   } else {
     // JSON encode
-    data = params;
+    data = augmentedParams;
   }
 
   // Encode data
   let encodedData: URLSearchParams | string | undefined;
   if (data) {
     if (headers['Content-Type'] === 'application/x-www-form-urlencoded') {
-      encodedData = new URLSearchParams(params);
+      encodedData = new URLSearchParams(augmentedParams);
     } else {
       encodedData = JSON.stringify(data);
     }
