@@ -248,6 +248,7 @@ export const validateSignedRequest = async (
 
   // Get the cross-server credential
   const crossServerCredential: CrossServerCredential = await crossServerCredentialCollection.find({ key });
+  console.log('Credential:', key, crossServerCredential);
   if (!crossServerCredential) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the credential was not found.',
@@ -257,16 +258,17 @@ export const validateSignedRequest = async (
 
   // Make sure the scope is included
   const allowedScopes = crossServerCredential.scopes;
-  console.log('Key', key, 'Credential', crossServerCredential, 'Scopes', allowedScopes);
-  if (!allowedScopes.includes(opts.scope)) {
+  console.log('Scopes', allowedScopes);
+  if (!allowedScopes || !Array.isArray(allowedScopes) || !allowedScopes.includes(opts.scope)) {
     throw new ErrorWithCode(
-      'Could not validate a cross-server request because the scope was not included.',
+      'Could not validate a cross-server request because the required scope was not approved for the credential.',
       ExpressKitErrorCode.SignedRequestInvalidScope,
     );
   }
 
   // Decode the secret
   const secret = await decrypt(crossServerCredential.encodedeSecret);
+  console.log('Decoded secret:', secret);
 
   /* -------- Verify Signature -------- */
 
