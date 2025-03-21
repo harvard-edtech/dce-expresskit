@@ -233,6 +233,7 @@ export const validateSignedRequest = async (
     method,
     path,
     params,
+    scope,
   } = opts;
 
   /* ------- Look Up Credential ------- */
@@ -258,7 +259,15 @@ export const validateSignedRequest = async (
 
   // Make sure the scope is included
   const allowedScopes = crossServerCredential.scopes;
-  if (!allowedScopes || !Array.isArray(allowedScopes) || !allowedScopes.includes(opts.scope)) {
+  console.log('Scope:', scope, 'Allowed Scopes:', allowedScopes);
+  if (!allowedScopes || !Array.isArray(allowedScopes)) {
+    throw new ErrorWithCode(
+      'Could not validate a cross-server request because the credential does not have access to any scopes.',
+      ExpressKitErrorCode.SignedRequestInvalidScope,
+    );
+
+  }
+  if (!allowedScopes.includes(scope)) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the required scope was not approved for the credential.',
       ExpressKitErrorCode.SignedRequestInvalidScope,
