@@ -133,17 +133,17 @@ const sendServerToServerRequest = async (
   const credential = getCrossServerCredential(opts.host);
 
   // Sign the request, get new params
-  const augmentedParams = await signRequest({
+  params = await signRequest({
     method: opts.method,
     path: opts.path,
-    params: opts.params ?? {},
+    params: params ?? {},
     key: credential.key,
     secret: credential.secret,
   });
 
   // Stringify parameters
   const stringifiedParams = qs.stringify(
-    augmentedParams || {},
+    params || {},
     {
       encodeValuesOnly: true,
       arrayFormat: 'brackets',
@@ -172,14 +172,14 @@ const sendServerToServerRequest = async (
     data = (method !== 'GET' ? stringifiedParams : null);
   } else {
     // JSON encode
-    data = augmentedParams;
+    data = params;
   }
 
   // Encode data
   let encodedData: URLSearchParams | string | undefined;
   if (data) {
     if (headers['Content-Type'] === 'application/x-www-form-urlencoded') {
-      encodedData = new URLSearchParams(augmentedParams);
+      encodedData = new URLSearchParams(params);
     } else {
       encodedData = JSON.stringify(data);
     }
