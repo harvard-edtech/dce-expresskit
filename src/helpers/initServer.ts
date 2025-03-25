@@ -1,36 +1,54 @@
-// Import express
-import express from 'express';
+// Import shared helpers
+import genRouteHandler from '../helpers/genRouteHandler';
 
-// Import dce-mango
-import { Collection } from 'dce-mango';
+import LOG_REVIEW_PAGE_SIZE from '../constants/LOG_REVIEW_PAGE_SIZE';
 
 // Import dce-reactkit
 import {
-  ErrorWithCode,
-  ParamType,
   LogFunction,
+  ParamType,
+  ReactKitErrorCode,
+  LogReviewerFilterState,
+  LogType,
+  LOG_REVIEW_GET_LOGS_ROUTE,
+  LOG_ROUTE_PATH,
+  LOG_REVIEW_STATUS_ROUTE,
+  ErrorWithCode,
 } from 'dce-reactkit';
 
-// Import internal constants of dce-reactkit
-import LOG_REVIEW_ROUTE_PATH_PREFIX from 'dce-reactkit/src/constants/LOG_REVIEW_ROUTE_PATH_PREFIX';
-import LOG_ROUTE_PATH from 'dce-reactkit/src/constants/LOG_ROUTE_PATH';
-import LOG_REVIEW_STATUS_ROUTE from 'dce-reactkit/src/constants/LOG_REVIEW_STATUS_ROUTE';
 
-// Import shared helpers
-import genRouteHandler from './genRouteHandler';
+// Types
+type GetLaunchInfoFunction = (req: any) => {
+  launched: boolean,
+  launchInfo?: any,
+};
 
-// Import shared types
-import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
+// Stored copy of caccl functions
+let _cacclGetLaunchInfo: GetLaunchInfoFunction;
 
 // Stored copy of dce-mango log collection
 let _logCollection: any;
 
-// Stored copy of dce-mango cross-server credential collection
-let _crossServerCredentialCollection: any;
-
 /*------------------------------------------------------------------------*/
 /*                                 Helpers                                */
 /*------------------------------------------------------------------------*/
+
+/**
+ * Get launch info via CACCL
+ * @author Gabe Abrams
+ * @param req express request object
+ * @returns object { launched, launchInfo }
+ */
+export const cacclGetLaunchInfo: GetLaunchInfoFunction = (req: any) => {
+  if (!_cacclGetLaunchInfo) {
+    throw new ErrorWithCode(
+      'Could not get launch info because server was not initialized with dce-reactkit\'s initServer function',
+      ReactKitErrorCode.NoCACCLGetLaunchInfoFunction,
+    );
+  }
+
+  return _cacclGetLaunchInfo(req);
+};
 
 /**
  * Get log collection
@@ -40,16 +58,6 @@ let _crossServerCredentialCollection: any;
  */
 export const internalGetLogCollection = () => {
   return _logCollection ?? null;
-};
-
-/**
- * Get cross-server credential collection
- * @author Gabe Abrams
- * @return cross-server credential collection if one was included during launch or null
- *   if we don't have a cross-server credential collection (yet)
- */
-export const internalGetCrossServerCredentialCollection = () => {
-  return _crossServerCredentialCollection ?? null;
 };
 
 /*------------------------------------------------------------------------*/
@@ -72,20 +80,17 @@ export const internalGetCrossServerCredentialCollection = () => {
  *   userIds are allowed to review logs. If a dce-mango collection, only
  *   Canvas admins with entries in that collection ({ userId, ...}) are allowed
  *   to review logs
- * @param [opts.crossServerCredentialCollection] mongo collection from dce-mango to use for
- *   storing cross-server credentials. If none is included, cross-server credentials
- *   are not supported
  */
 const initServer = (
   opts: {
-    app: express.Application,
-    logReviewAdmins?: (number[] | Collection<any>),
-    logCollection?: Collection<any>,
-    crossServerCredentialCollection?: Collection<any>,
+    app: any,
+    getLaunchInfo: GetLaunchInfoFunction,
+    logCollection?: any,
+    logReviewAdmins?: (number[] | any),
   },
 ) => {
+  _cacclGetLaunchInfo = opts.getLaunchInfo;
   _logCollection = opts.logCollection;
-  _crossServerCredentialCollection = opts.crossServerCredentialCollection;
 
   /*----------------------------------------*/
   /*                Logging                 */
@@ -231,48 +236,229 @@ const initServer = (
   );
 
   /**
-   * Get all logs for a certain month
-   * @author Gabe Abrams
-   * @param {number} year the year to query (e.g. 2022)
-   * @param {number} month the month to query (e.g. 1 = January)
-   * @returns {Log[]} list of logs from the given month
-   */
+ * Get filtered logs based on provided filters
+ * @author Gabe Abrams, Yuen Ler Chow
+ * @param pageNumber the page number to get
+ * @param filters the filters to apply to the logs
+ * @returns {Log[]} list of logs that match the filters
+ */
   opts.app.get(
-    `${LOG_REVIEW_ROUTE_PATH_PREFIX}/years/:year/months/:month`,
+    LOG_REVIEW_GET_LOGS_ROUTE,
     genRouteHandler({
       paramTypes: {
-        year: ParamType.Int,
-        month: ParamType.Int,
         pageNumber: ParamType.Int,
+        filters: ParamType.JSON,
+        countDocuments: ParamType.Boolean,
       },
       handler: async ({ params }) => {
-        // Get user info
+      // Get user info
         const {
-          year,
-          month,
           pageNumber,
           userId,
           isAdmin,
+          filters,
+          countDocuments,
         } = params;
+
+        const {
+          dateFilterState,
+          contextFilterState,
+          tagFilterState,
+          actionErrorFilterState,
+          advancedFilterState,
+        } = filters as LogReviewerFilterState;
 
         // Validate user
         const canReview = await canReviewLogs(userId, isAdmin);
         if (!canReview) {
           throw new ErrorWithCode(
             'You cannot access this resource because you do not have the appropriate permissions.',
-            ExpressKitErrorCode.NotAllowedToReviewLogs,
+            ReactKitErrorCode.NotAllowedToReviewLogs,
           );
+        }
+
+        // Build MongoDB query based on filters
+        const query: { [k: string]: any } = {};
+
+        /* -------------- Date Filter ------------- */
+
+        // Convert start and end dates from the dateFilterState into timestamps
+        const { startDate, endDate } = dateFilterState;
+        const startTimestamp = new Date(startDate.year, startDate.month - 1, startDate.day).getTime();
+        const endTimestamp = new Date(endDate.year, endDate.month - 1, endDate.day + 1).getTime() - 1;
+
+        // Add a date range condition to the query
+        query.timestamp = {
+          $gte: startTimestamp,
+          $lte: endTimestamp,
+        };
+
+        /* ------------ Context Filter ------------ */
+        // Process context filters to include selected contexts and subcontexts
+        const contextConditions: { [k: string]: any }[] = [];
+        Object.keys(contextFilterState).forEach((context) => {
+          const value = contextFilterState[context];
+          if (typeof value === 'boolean') {
+            if (value) {
+              // The entire context is selected
+              contextConditions.push({ context });
+            }
+          } else {
+            // The context has subcontexts
+            const subcontexts = Object.keys(value).filter((subcontext) => { return value[subcontext]; });
+            if (subcontexts.length > 0) {
+              contextConditions.push({
+                context,
+                subcontext: { $in: subcontexts },
+              });
+            }
+          }
+        });
+        if (contextConditions.length > 0) {
+          query.$or = contextConditions;
+        }
+
+        /* -------------- Tag Filter -------------- */
+
+        const selectedTags = Object.keys(tagFilterState).filter((tag) => { return tagFilterState[tag]; });
+        if (selectedTags.length > 0) {
+          query.tags = { $in: selectedTags };
+        }
+
+        /* --------- Action/Error Filter ---------- */
+
+        if (actionErrorFilterState.type) {
+          query.type = actionErrorFilterState.type;
+        }
+
+        if (actionErrorFilterState.type === LogType.Error) {
+          if (actionErrorFilterState.errorMessage) {
+            // Add error message to the query.
+            // $i is used for case-insensitive search, and $regex is used for partial matching
+            query.errorMessage = {
+              $regex: actionErrorFilterState.errorMessage,
+              $options: 'i',
+            };
+          }
+
+          if (actionErrorFilterState.errorCode) {
+            query.errorCode = {
+              $regex: actionErrorFilterState.errorCode,
+              $options: 'i',
+            };
+          }
+        }
+
+        if (actionErrorFilterState.type === LogType.Action) {
+          const selectedTargets = (
+            Object.keys(actionErrorFilterState.target)
+              .filter((target) => {
+                return actionErrorFilterState.target[target];
+              })
+          );
+          const selectedActions = (
+            Object.keys(actionErrorFilterState.action)
+              .filter((action) => {
+                return actionErrorFilterState.action[action];
+              })
+          );
+          if (selectedTargets.length > 0) {
+            query.target = { $in: selectedTargets };
+          }
+          if (selectedActions.length > 0) {
+            query.action = { $in: selectedActions };
+          }
+        }
+
+        /* ------------ Advanced Filter ----------- */
+
+        if (advancedFilterState.userFirstName) {
+          query.userFirstName = {
+            $regex: advancedFilterState.userFirstName,
+            $options: 'i',
+          };
+        }
+
+        if (advancedFilterState.userLastName) {
+          query.userLastName = {
+            $regex: advancedFilterState.userLastName,
+            $options: 'i',
+          };
+        }
+
+        if (advancedFilterState.userEmail) {
+          query.userEmail = {
+            $regex: advancedFilterState.userEmail,
+            $options: 'i',
+          };
+        }
+
+        if (advancedFilterState.userId) {
+          query.userId = Number.parseInt(advancedFilterState.userId, 10);
+        }
+
+        const roles = [];
+        if (advancedFilterState.includeLearners) {
+          roles.push({ isLearner: true });
+        }
+        if (advancedFilterState.includeTTMs) {
+          roles.push({ isTTM: true });
+        }
+        if (advancedFilterState.includeAdmins) {
+          roles.push({ isAdmin: true });
+        }
+        // If any roles are selected, add them to the query
+        if (roles.length > 0) {
+          // The $or operator is used to match any of the roles
+          // The $and operator is to ensure that other conditions in the query are met
+          query.$and = [{ $or: roles }];
+        }
+
+        if (advancedFilterState.courseId) {
+          query.courseId = Number.parseInt(advancedFilterState.courseId, 10);
+        }
+
+        if (advancedFilterState.courseName) {
+          query.courseName = {
+            $regex: advancedFilterState.courseName,
+            $options: 'i',
+          };
+        }
+
+        if (advancedFilterState.isMobile !== undefined) {
+          query['device.isMobile'] = Boolean(advancedFilterState.isMobile);
+        }
+
+        if (advancedFilterState.source) {
+          query.source = advancedFilterState.source;
+        }
+
+        if (advancedFilterState.routePath) {
+          query.routePath = {
+            $regex: advancedFilterState.routePath,
+            $options: 'i',
+          };
+        }
+
+        if (advancedFilterState.routeTemplate) {
+          query.routeTemplate = {
+            $regex: advancedFilterState.routeTemplate,
+            $options: 'i',
+          };
         }
 
         // Query for logs
         const response = await _logCollection.findPaged({
-          query: {
-            year,
-            month,
-          },
-          perPage: 1000,
+          query,
+          perPage: LOG_REVIEW_PAGE_SIZE,
           pageNumber,
+          sortDescending: true,
         });
+
+        // Count documents if requested
+        if (countDocuments) {
+          response.numPages = Math.ceil(await _logCollection.count(query) / LOG_REVIEW_PAGE_SIZE);
+        }
 
         // Return response
         return response;
