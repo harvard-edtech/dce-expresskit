@@ -1,54 +1,39 @@
-// Import shared helpers
-import genRouteHandler from '../helpers/genRouteHandler';
+// Import express
+import express from 'express';
 
-import LOG_REVIEW_PAGE_SIZE from '../constants/LOG_REVIEW_PAGE_SIZE';
+// Import dce-mango
+import { Collection } from 'dce-mango';
 
 // Import dce-reactkit
 import {
-  LogFunction,
+  ErrorWithCode,
   ParamType,
-  ReactKitErrorCode,
-  LogReviewerFilterState,
-  LogType,
-  LOG_REVIEW_GET_LOGS_ROUTE,
+  LogFunction,
   LOG_ROUTE_PATH,
   LOG_REVIEW_STATUS_ROUTE,
-  ErrorWithCode,
+  Log,
+  LOG_REVIEW_GET_LOGS_ROUTE,
+  LogReviewerFilterState,
+  LogType,
 } from 'dce-reactkit';
 
+// Import shared helpers
+import genRouteHandler from './genRouteHandler';
 
-// Types
-type GetLaunchInfoFunction = (req: any) => {
-  launched: boolean,
-  launchInfo?: any,
-};
-
-// Stored copy of caccl functions
-let _cacclGetLaunchInfo: GetLaunchInfoFunction;
+// Import shared types
+import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
+import CrossServerCredential from '../types/CrossServerCredential';
+import LOG_REVIEW_PAGE_SIZE from '../constants/LOG_REVIEW_PAGE_SIZE';
 
 // Stored copy of dce-mango log collection
-let _logCollection: any;
+let _logCollection: Collection<Log>;
+
+// Stored copy of dce-mango cross-server credential collection
+let _crossServerCredentialCollection: Collection<CrossServerCredential>;
 
 /*------------------------------------------------------------------------*/
 /*                                 Helpers                                */
 /*------------------------------------------------------------------------*/
-
-/**
- * Get launch info via CACCL
- * @author Gabe Abrams
- * @param req express request object
- * @returns object { launched, launchInfo }
- */
-export const cacclGetLaunchInfo: GetLaunchInfoFunction = (req: any) => {
-  if (!_cacclGetLaunchInfo) {
-    throw new ErrorWithCode(
-      'Could not get launch info because server was not initialized with dce-reactkit\'s initServer function',
-      ReactKitErrorCode.NoCACCLGetLaunchInfoFunction,
-    );
-  }
-
-  return _cacclGetLaunchInfo(req);
-};
 
 /**
  * Get log collection
@@ -58,6 +43,16 @@ export const cacclGetLaunchInfo: GetLaunchInfoFunction = (req: any) => {
  */
 export const internalGetLogCollection = () => {
   return _logCollection ?? null;
+};
+
+/**
+ * Get cross-server credential collection
+ * @author Gabe Abrams
+ * @return cross-server credential collection if one was included during launch or null
+ *   if we don't have a cross-server credential collection (yet)
+ */
+export const internalGetCrossServerCredentialCollection = () => {
+  return _crossServerCredentialCollection ?? null;
 };
 
 /*------------------------------------------------------------------------*/
@@ -80,17 +75,20 @@ export const internalGetLogCollection = () => {
  *   userIds are allowed to review logs. If a dce-mango collection, only
  *   Canvas admins with entries in that collection ({ userId, ...}) are allowed
  *   to review logs
+ * @param [opts.crossServerCredentialCollection] mongo collection from dce-mango to use for
+ *   storing cross-server credentials. If none is included, cross-server credentials
+ *   are not supported
  */
 const initServer = (
   opts: {
-    app: any,
-    getLaunchInfo: GetLaunchInfoFunction,
-    logCollection?: any,
-    logReviewAdmins?: (number[] | any),
+    app: express.Application,
+    logReviewAdmins?: (number[] | Collection<any>),
+    logCollection?: Collection<Log>,
+    crossServerCredentialCollection?: Collection<CrossServerCredential>,
   },
 ) => {
-  _cacclGetLaunchInfo = opts.getLaunchInfo;
   _logCollection = opts.logCollection;
+  _crossServerCredentialCollection = opts.crossServerCredentialCollection;
 
   /*----------------------------------------*/
   /*                Logging                 */
@@ -236,12 +234,12 @@ const initServer = (
   );
 
   /**
- * Get filtered logs based on provided filters
- * @author Gabe Abrams, Yuen Ler Chow
- * @param pageNumber the page number to get
- * @param filters the filters to apply to the logs
- * @returns {Log[]} list of logs that match the filters
- */
+   * Get filtered logs based on provided filters
+   * @author Gabe Abrams, Yuen Ler Chow
+   * @param pageNumber the page number to get
+   * @param filters the filters to apply to the logs
+   * @returns {Log[]} list of logs that match the filters
+   */
   opts.app.get(
     LOG_REVIEW_GET_LOGS_ROUTE,
     genRouteHandler({
@@ -273,7 +271,7 @@ const initServer = (
         if (!canReview) {
           throw new ErrorWithCode(
             'You cannot access this resource because you do not have the appropriate permissions.',
-            ReactKitErrorCode.NotAllowedToReviewLogs,
+            ExpressKitErrorCode.NotAllowedToReviewLogs,
           );
         }
 
@@ -457,7 +455,11 @@ const initServer = (
 
         // Count documents if requested
         if (countDocuments) {
-          response.numPages = Math.ceil(await _logCollection.count(query) / LOG_REVIEW_PAGE_SIZE);
+          const numPages = Math.ceil(await _logCollection.count(query) / LOG_REVIEW_PAGE_SIZE);
+          return {
+            ...response,
+            numPages,
+          };
         }
 
         // Return response
