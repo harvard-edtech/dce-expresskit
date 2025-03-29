@@ -247,7 +247,7 @@ const initServer = (
         countDocuments: ParamType.Boolean,
       },
       handler: async ({ params }) => {
-      // Get user info
+        // Destructure params
         const {
           pageNumber,
           userId,
