@@ -1,13 +1,14 @@
 // Import dce-reactkit
 import {  
+  DAY_IN_MS,
   Log,
   LogReviewerFilterState, 
   LogType 
-} from "dce-reactkit";
+} from 'dce-reactkit';
 
 // Import shared types
-import LOG_REVIEW_PAGE_SIZE from "../constants/LOG_REVIEW_PAGE_SIZE";
-import { Collection } from "dce-mango";
+import LOG_REVIEW_PAGE_SIZE from '../constants/LOG_REVIEW_PAGE_SIZE';
+import { Collection } from 'dce-mango';
 
 /**
  * Get logs for the log reviewer interface
@@ -15,16 +16,20 @@ import { Collection } from "dce-mango";
  * @param opts object containing all arguments
  * @param opts.pageNumber the page number to retrieve (1-indexed)
  * @param opts.filters filter criteria for logs
- * @param opts.countDocuments if true, count number of documents matching filters and return num pages
+ * @param opts.countDocuments if true, count number of documents matching
+ *   filters and return num pages (not always required because if changing pages,
+ *   we don't need to recount documents)
  * @param opts.logCollection MongoDB collection containing logs
  * @returns object with logs for the requested page and optionally total number of pages
  */
-const getLogReviewerLogs = async (opts: {
-  pageNumber: number,
-  filters: LogReviewerFilterState,
-  countDocuments: boolean,
-  logCollection: Collection<Log>,
-}) => {
+const getLogReviewerLogs = async (
+  opts: {
+    pageNumber: number,
+    filters: LogReviewerFilterState,
+    countDocuments: boolean,
+    logCollection: Collection<Log>,
+  },
+) => {
 
   // Destructure opts
   const {
@@ -51,16 +56,22 @@ const getLogReviewerLogs = async (opts: {
 
   // Convert start and end dates from the dateFilterState into timestamps
   const { startDate, endDate } = dateFilterState;
-  const startTimestamp = new Date(startDate.year, startDate.month - 1, startDate.day).getTime();
-  const endTimestamp = new Date(endDate.year, endDate.month - 1, endDate.day + 1).getTime() - 1;
+  const startTimestamp = new Date(
+    `${startDate.month}/${startDate.day}/${startDate.year}`,
+  ).getTime();
+  const endTimestamp = (
+    (new Date(`${endDate.month}/${endDate.day}/${endDate.year}`)).getTime()
+    + DAY_IN_MS
+  );
 
   // Add a date range condition to the query
   query.timestamp = {
     $gte: startTimestamp,
-    $lte: endTimestamp,
+    $lt: endTimestamp,
   };
 
   /* ------------ Context Filter ------------ */
+
   // Process context filters to include selected contexts and subcontexts
   const contextConditions: { [k: string]: any }[] = [];
   Object.keys(contextFilterState).forEach((context) => {
@@ -72,7 +83,10 @@ const getLogReviewerLogs = async (opts: {
       }
     } else {
       // The context has subcontexts
-      const subcontexts = Object.keys(value).filter((subcontext) => { return value[subcontext]; });
+      const subcontexts = Object.keys(value).filter((subcontext) => {
+        return value[subcontext];
+      });
+
       if (subcontexts.length > 0) {
         contextConditions.push({
           context,
@@ -164,7 +178,11 @@ const getLogReviewerLogs = async (opts: {
     query.userId = Number.parseInt(advancedFilterState.userId, 10);
   }
 
-  const roles = [];
+  const roles: {
+    isLearner?: boolean,
+    isTTM?: boolean,
+    isAdmin?: boolean,
+  }[] = [];
   if (advancedFilterState.includeLearners) {
     roles.push({ isLearner: true });
   }
@@ -224,7 +242,10 @@ const getLogReviewerLogs = async (opts: {
 
   // Count documents if requested
   if (countDocuments) {
-    const numPages = Math.ceil(await logCollection.count(query) / LOG_REVIEW_PAGE_SIZE);
+    const numPages = Math.ceil(
+      await logCollection.count(query)
+      / LOG_REVIEW_PAGE_SIZE
+  );
     return {
       ...response,
       numPages,
