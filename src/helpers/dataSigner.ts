@@ -172,6 +172,7 @@ export const signRequest = async (
   // Add signature to the augmented params
   augmentedParams.oauth_signature = signature;
 
+
   // Return the augmented params
   return augmentedParams;
 };
@@ -233,6 +234,7 @@ export const validateSignedRequest = async (
     method,
     path,
     params,
+    scope,
   } = opts;
 
   /* ------- Look Up Credential ------- */
@@ -247,19 +249,27 @@ export const validateSignedRequest = async (
   }
 
   // Get the cross-server credential
-  const crossServerCredential: CrossServerCredential = await crossServerCredentialCollection.find({ key });
-  if (!crossServerCredential) {
+  const crossServerCredentialMatches: CrossServerCredential[] = await crossServerCredentialCollection.find({ key });
+  if (!crossServerCredentialMatches || crossServerCredentialMatches.length === 0) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the credential was not found.',
       ExpressKitErrorCode.SignedRequestInvalidCredential,
     );
   }
+  const crossServerCredential = crossServerCredentialMatches[0];
 
   // Make sure the scope is included
   const allowedScopes = crossServerCredential.scopes;
-  if (!allowedScopes.includes(opts.scope)) {
+  if (!allowedScopes || !Array.isArray(allowedScopes)) {
     throw new ErrorWithCode(
-      'Could not validate a cross-server request because the scope was not included.',
+      'Could not validate a cross-server request because the credential does not have access to any scopes.',
+      ExpressKitErrorCode.SignedRequestInvalidScope,
+    );
+
+  }
+  if (!allowedScopes.includes(scope)) {
+    throw new ErrorWithCode(
+      'Could not validate a cross-server request because the required scope was not approved for the credential.',
       ExpressKitErrorCode.SignedRequestInvalidScope,
     );
   }
@@ -269,11 +279,24 @@ export const validateSignedRequest = async (
 
   /* -------- Verify Signature -------- */
 
+  // Curate what goes into the params
+  const paramsToSign: {
+    [key: string]: any,
+  } = {
+    ...params,
+  };
+  Object.keys(paramsToSign).forEach((key) => {
+    // Delete oauth params
+    if (key.startsWith('oauth_')) {
+      delete paramsToSign[key];
+    }
+  });
+
   // Generate a new signature to compare
   const expectedSignature = await genSignature({
     method,
     path,
-    params,
+    params: paramsToSign,
     secret,
   });
 
@@ -287,7 +310,7 @@ export const validateSignedRequest = async (
 
   // Make sure the timestamp was recent enough
   const elapsedMs = Math.abs(Date.now() - timestamp);
-  if (elapsedMs < MINUTE_IN_MS) {
+  if (elapsedMs > MINUTE_IN_MS) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the request was too old.',
       ExpressKitErrorCode.SignedRequestInvalidTimestamp,
