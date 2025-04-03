@@ -1,3 +1,6 @@
+// Import dce-mango
+import { Collection } from 'dce-mango';
+
 // Import dce-reactkit
 import {  
   DAY_IN_MS,
@@ -8,7 +11,6 @@ import {
 
 // Import shared types
 import LOG_REVIEW_PAGE_SIZE from '../constants/LOG_REVIEW_PAGE_SIZE';
-import { Collection } from 'dce-mango';
 
 /**
  * Get logs for the log reviewer interface
@@ -30,7 +32,6 @@ const getLogReviewerLogs = async (
     logCollection: Collection<Log>,
   },
 ) => {
-
   // Destructure opts
   const {
     pageNumber,
