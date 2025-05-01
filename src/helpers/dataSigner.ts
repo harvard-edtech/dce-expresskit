@@ -11,6 +11,7 @@ import oauth from 'oauth-signature';
 import crypto from 'crypto';
 
 // Import shared helpers
+// TODO: import from the initExpressKitCollections instead
 import { internalGetCrossServerCredentialCollection } from './initServer';
 
 // Import shared types

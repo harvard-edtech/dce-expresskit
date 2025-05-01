@@ -19,6 +19,7 @@ import {
 import { getLaunchInfo } from 'caccl/server';
 
 // Import caccl functions
+// TODO: import from initExpressKitCollections instead
 import {
   internalGetLogCollection,
 } from './initServer';
