@@ -28,7 +28,8 @@ const collectionsInitialized = new Promise((resolve, reject) => {
 /*------------------------------------------------------------------------*/
 
 /**
- * TODO: ADD DOCS
+ * Get the log collection after initialization
+ * @author Gardenia Liu
  */
 export const internalGetLogCollection = async () => {
   // Wait for collections to be initialized
@@ -38,7 +39,17 @@ export const internalGetLogCollection = async () => {
   return logCollection;
 };
 
-// TODO: create function for crossServerCredentialCollection
+/**
+ * Get the cross server credential collection after initialization
+ * @author Gardenia Liu
+ */
+export const internalGetCrossServerCredentialCollection = async () => {
+  // Wait for collections to be initialized
+  await collectionsInitialized;
+
+  // Return the cross server credential collection
+  return crossServerCredentialCollection;
+};
 
 /*------------------------------------------------------------------------*/
 /* -------------------------------- Main -------------------------------- */
@@ -52,10 +63,31 @@ export const internalGetLogCollection = async () => {
  */
 const initExpressKitCollections = (Collection: typeof MangoCollection) => {
   try {
-    // TODO: Create log collection, store it to the variable
-    logCollection = ...copied from the function...;
-    // TODO: Create cross server credential collection, store it to the variable
-    crossServerCredentialCollection = ...copied from the function...;
+    // Create and store log collection
+    logCollection = new Collection<Log>(
+      'Log',
+      {
+        uniqueIndexKey: 'id',
+        indexKeys: [
+          'courseId',
+          'context',
+          'subcontext',
+          'tags',
+          'year',
+          'month',
+          'day',
+          'hour',
+          'type',
+        ],
+      },
+    );
+    // Create and store cross server credential collection
+    crossServerCredentialCollection = new Collection<CrossServerCredential>(
+      'CrossServerCredential',
+      {
+        uniqueIndexKey: 'key',
+      },
+    );
 
     // Finished! Resolve the promise
     collectionsInitializedResolve();

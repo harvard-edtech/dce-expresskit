@@ -27,40 +27,6 @@ import {
   internalGetLogCollection,
 } from './initExpressKitCollections';
 
-// TODO: remove this
-// Stored copy of dce-mango log collection
-let _logCollection: Collection<Log>;
-
-// TODO: remove this
-// Stored copy of dce-mango cross-server credential collection
-let _crossServerCredentialCollection: Collection<CrossServerCredential>;
-
-/*------------------------------------------------------------------------*/
-/*                                 Helpers                                */
-/*------------------------------------------------------------------------*/
-
-// TODO: remove this because we will use the getters in initExpressKitCollections instead
-/**
- * Get log collection
- * @author Gabe Abrams
- * @returns log collection if one was included during launch or null if we don't
- *   have a log collection (yet)
- */
-export const internalGetLogCollection = () => {
-  return _logCollection ?? null;
-};
-
-// TODO: remove this because we will use the getters in initExpressKitCollections instead
-/**
- * Get cross-server credential collection
- * @author Gabe Abrams
- * @return cross-server credential collection if one was included during launch or null
- *   if we don't have a cross-server credential collection (yet)
- */
-export const internalGetCrossServerCredentialCollection = () => {
-  return _crossServerCredentialCollection ?? null;
-};
-
 /*------------------------------------------------------------------------*/
 /*                                  Main                                  */
 /*------------------------------------------------------------------------*/
@@ -71,9 +37,6 @@ export const internalGetCrossServerCredentialCollection = () => {
  * @param opts object containing all arguments
  * @param opts.app express app from inside of the postprocessor function that
  *   we will add routes to
- * // TODO: remove opts.logCollection (don't need it)
- * @param [opts.logCollection] mongo collection from dce-mango to use for
- *   storing logs. If none is included, logs are written to the console
  * @param [opts.logReviewAdmins=all] info on which admins can review
  *   logs from the client. If not included, all Canvas admins are allowed to
  *   review logs. If null, no Canvas admins are allowed to review logs.
@@ -81,24 +44,13 @@ export const internalGetCrossServerCredentialCollection = () => {
  *   userIds are allowed to review logs. If a dce-mango collection, only
  *   Canvas admins with entries in that collection ({ userId, ...}) are allowed
  *   to review logs
- * // TODO: remove opts.crossServerCredentialCollection (don't need it)
- * @param [opts.crossServerCredentialCollection] mongo collection from dce-mango to use for
- *   storing cross-server credentials. If none is included, cross-server credentials
- *   are not supported
  */
 const initServer = (
   opts: {
     app: express.Application,
     logReviewAdmins?: (number[] | Collection<any>),
-    // TODO: Remove these collections:
-    logCollection?: Collection<Log>,
-    crossServerCredentialCollection?: Collection<CrossServerCredential>,
   },
 ) => {
-  // TODO: Remove these collections:
-  _logCollection = opts.logCollection;
-  _crossServerCredentialCollection = opts.crossServerCredentialCollection;
-
   /*----------------------------------------*/
   /*                Logging                 */
   /*----------------------------------------*/
