@@ -19,10 +19,7 @@ import {
 import { getLaunchInfo } from 'caccl/server';
 
 // Import caccl functions
-// TODO: import from initExpressKitCollections instead
-import {
-  internalGetLogCollection,
-} from './initServer';
+import initExpressKitCollections, { internalGetLogCollection, internalGetSelectAdminCollection } from './initExpressKitCollections';
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
@@ -564,6 +561,29 @@ const genRouteHandler = (
       );
     }
 
+    // Add Select Admin endpoint security
+    if (
+      // This is a select admin endpoint
+      req.path.startsWith('/api/admin/select')
+    ) {
+      // Get select admin collection
+      const selectAdminCollection = internalGetSelectAdminCollection();
+      const userId = output.userId;
+      if (
+        // TODO see if can find select admin based on their id
+        true
+      ) {
+        // Not authorized
+        return handleError(
+          res,
+          {
+            message: 'This action is only allowed for select Canvas admins. Please go back to Canvas, log in as a select admin, and try again.',
+            code: ExpressKitErrorCode.NotSelectAdmin,
+            status: 401,
+          },
+        );
+      }
+    }
     /*----------------------------------------*/
     /* ------------- Log Handler ------------ */
     /*----------------------------------------*/
