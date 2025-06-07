@@ -6,6 +6,7 @@ import { Log } from 'dce-reactkit';
 
 // Import shared types
 import CrossServerCredential from '../types/CrossServerCredential';
+import SelectAdmin from '../types/SelectAdmin';
 
 /*------------------------------------------------------------------------*/
 /* ------------------------- Collection Storage ------------------------- */
@@ -14,6 +15,7 @@ import CrossServerCredential from '../types/CrossServerCredential';
 // Variables to store collections
 let logCollection: MangoCollection<Log>;
 let crossServerCredentialCollection: MangoCollection<CrossServerCredential>;
+let selectAdminCollection: MangoCollection<SelectAdmin>;
 
 // Promise that resolves when all collections are initialized
 let collectionsInitializedResolve: (v?: unknown) => void;
@@ -49,6 +51,18 @@ export const internalGetCrossServerCredentialCollection = async () => {
 
   // Return the cross server credential collection
   return crossServerCredentialCollection;
+};
+
+/**
+ * Get the select admin collection after initialization
+ * @author Gardenia Liu
+ */
+export const internalGetSelectAdminCollection = async () => {
+  // Wait for collections to be initialized
+  await collectionsInitialized;
+
+  // Return the cross server credential collection
+  return selectAdminCollection;
 };
 
 /*------------------------------------------------------------------------*/
@@ -88,6 +102,16 @@ const initExpressKitCollections = (Collection: typeof MangoCollection) => {
         uniqueIndexKey: 'key',
       },
     );
+    // Create and store select admin collection
+    selectAdminCollection = new Collection<SelectAdmin>(
+      'SelectAdmin',
+      {
+        uniqueIndexKey: 'key',
+        indexKeys: [
+          // TODO: do I need any?
+        ]
+      }
+    )
 
     // Finished! Resolve the promise
     collectionsInitializedResolve();
