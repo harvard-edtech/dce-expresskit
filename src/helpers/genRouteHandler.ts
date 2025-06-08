@@ -569,11 +569,13 @@ const genRouteHandler = (
       // Get select admin collection
       const selectAdminCollection = internalGetSelectAdminCollection();
       const userId = output.userId;
-      if (
-        // TODO see if can find select admin based on their id
-        true
-      ) {
-        // Not authorized
+
+      // Find match if exists in select admin collection
+      const [match] = selectAdminCollection.find({ userId });
+
+      // Check that user exists in select admin collection
+      if (!match) {
+        // User does not have access
         return handleError(
           res,
           {
