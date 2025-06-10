@@ -6,17 +6,18 @@ import { Collection } from 'dce-mango';
 
 // Import dce-reactkit
 import {
-  ErrorWithCode,
   ParamType,
   LogFunction,
-  LOG_REVIEW_ROUTE_PATH_PREFIX,
   LOG_ROUTE_PATH,
   LOG_REVIEW_STATUS_ROUTE,
   Log,
+  LOG_REVIEW_GET_LOGS_ROUTE,
+  ErrorWithCode,
 } from 'dce-reactkit';
 
 // Import shared helpers
 import genRouteHandler from './genRouteHandler';
+import getLogReviewerLogs from './getLogReviewerLogs';
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
@@ -194,28 +195,28 @@ const initServer = (
   );
 
   /**
-   * Get all logs for a certain month
-   * @author Gabe Abrams
-   * @param {number} year the year to query (e.g. 2022)
-   * @param {number} month the month to query (e.g. 1 = January)
-   * @returns {Log[]} list of logs from the given month
+   * Get filtered logs based on provided filters
+   * @author Gabe Abrams, Yuen Ler Chow
+   * @param pageNumber the page number to get
+   * @param filters the filters to apply to the logs
+   * @returns {Log[]} list of logs that match the filters
    */
   opts.app.get(
-    `${LOG_REVIEW_ROUTE_PATH_PREFIX}/years/:year/months/:month`,
+    LOG_REVIEW_GET_LOGS_ROUTE,
     genRouteHandler({
       paramTypes: {
-        year: ParamType.Int,
-        month: ParamType.Int,
         pageNumber: ParamType.Int,
+        filters: ParamType.JSON,
+        countDocuments: ParamType.Boolean,
       },
       handler: async ({ params }) => {
-        // Get user info
+        // Destructure params
         const {
-          year,
-          month,
           pageNumber,
           userId,
           isAdmin,
+          filters,
+          countDocuments,
         } = params;
 
         // Validate user
@@ -230,14 +231,12 @@ const initServer = (
         // Get log collection
         const logCollection = await internalGetLogCollection();
 
-        // Query for logs
-        const response = await logCollection.findPaged({
-          query: {
-            year,
-            month,
-          },
-          perPage: 1000,
+        // Get logs
+        const response = await getLogReviewerLogs({
           pageNumber,
+          filters,
+          countDocuments,
+          logCollection,
         });
 
         // Return response
