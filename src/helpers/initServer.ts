@@ -20,7 +20,6 @@ import genRouteHandler from './genRouteHandler';
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
-import CrossServerCredential from '../types/CrossServerCredential';
 
 // Import shared helpers
 import {
@@ -229,7 +228,7 @@ const initServer = (
         }
 
         // Get log collection
-        const logCollection = internalGetLogCollection();
+        const logCollection = await internalGetLogCollection();
 
         // Query for logs
         const response = await logCollection.findPaged({

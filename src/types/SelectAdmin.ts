@@ -4,7 +4,7 @@
  */
 type SelectAdmin = {
   // User Canvas Id
-  userId: number,
+  id: number,
   // User first name
   userFirstName: string,
   // User last name

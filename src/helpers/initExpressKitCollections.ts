@@ -106,10 +106,7 @@ const initExpressKitCollections = (Collection: typeof MangoCollection) => {
     selectAdminCollection = new Collection<SelectAdmin>(
       'SelectAdmin',
       {
-        uniqueIndexKey: 'key',
-        indexKeys: [
-          // TODO: do I need any?
-        ]
+        uniqueIndexKey: 'id',
       }
     )
 

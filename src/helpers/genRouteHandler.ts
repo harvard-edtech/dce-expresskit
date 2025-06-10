@@ -567,11 +567,11 @@ const genRouteHandler = (
       req.path.startsWith('/api/admin/select')
     ) {
       // Get select admin collection
-      const selectAdminCollection = internalGetSelectAdminCollection();
-      const userId = output.userId;
+      const selectAdminCollection = await internalGetSelectAdminCollection();
+      const id = output.userId;
 
       // Find match if exists in select admin collection
-      const [match] = selectAdminCollection.find({ userId });
+      const [match] = await selectAdminCollection.find({ id });
 
       // Check that user exists in select admin collection
       if (!match) {
@@ -586,6 +586,7 @@ const genRouteHandler = (
         );
       }
     }
+
     /*----------------------------------------*/
     /* ------------- Log Handler ------------ */
     /*----------------------------------------*/
@@ -698,7 +699,7 @@ const genRouteHandler = (
         };
 
         // Either print to console or save to db
-        const logCollection = internalGetLogCollection();
+        const logCollection = await internalGetLogCollection();
         if (logCollection) {
           // Store to the log collection
           await logCollection.insert(log);
