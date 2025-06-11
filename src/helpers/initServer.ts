@@ -25,6 +25,7 @@ import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
 // Import shared helpers
 import {
   internalGetLogCollection,
+  internalGetLogReviewerAdminCollection,
 } from './initExpressKitCollections';
 
 /*------------------------------------------------------------------------*/
@@ -37,18 +38,10 @@ import {
  * @param opts object containing all arguments
  * @param opts.app express app from inside of the postprocessor function that
  *   we will add routes to
- * @param [opts.logReviewAdmins=all] info on which admins can review
- *   logs from the client. If not included, all Canvas admins are allowed to
- *   review logs. If null, no Canvas admins are allowed to review logs.
- *   If an array of Canvas userIds (numbers), only Canvas admins with those
- *   userIds are allowed to review logs. If a dce-mango collection, only
- *   Canvas admins with entries in that collection ({ userId, ...}) are allowed
- *   to review logs
  */
 const initServer = (
   opts: {
     app: express.Application,
-    logReviewAdmins?: (number[] | Collection<any>),
   },
 ) => {
   /*----------------------------------------*/
@@ -153,22 +146,15 @@ const initServer = (
       return false;
     }
 
-    // If all admins are allowed, we're done
-    if (!opts.logReviewAdmins) {
-      return true;
-    }
+    /* ------- Look Up Credential ------- */
+
+    // Get the log reviewer admin collection
+    const logReviewerAdminCollection = await internalGetLogReviewerAdminCollection();
 
     // Do a dynamic check
     try {
-      // Array of userIds
-      if (Array.isArray(opts.logReviewAdmins)) {
-        return opts.logReviewAdmins.some((allowedId) => {
-          return (userId === allowedId);
-        });
-      }
-
       // Must be a collection
-      const matches = await opts.logReviewAdmins.find({ userId });
+      const matches = await logReviewerAdminCollection.find({ userId });
 
       // Make sure at least one entry matches
       return matches.length > 0;
