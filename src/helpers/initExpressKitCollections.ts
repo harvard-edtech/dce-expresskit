@@ -7,6 +7,7 @@ import { Log } from 'dce-reactkit';
 // Import shared types
 import CrossServerCredential from '../types/CrossServerCredential';
 import SelectAdmin from '../types/SelectAdmin';
+import LogReviewerAdmin from '../types/LogReviewerAdmin';
 
 /*------------------------------------------------------------------------*/
 /* ------------------------- Collection Storage ------------------------- */
@@ -16,6 +17,7 @@ import SelectAdmin from '../types/SelectAdmin';
 let logCollection: MangoCollection<Log>;
 let crossServerCredentialCollection: MangoCollection<CrossServerCredential>;
 let selectAdminCollection: MangoCollection<SelectAdmin>;
+let logReviewerAdminCollection: MangoCollection<LogReviewerAdmin>;
 
 // Promise that resolves when all collections are initialized
 let collectionsInitializedResolve: (v?: unknown) => void;
@@ -65,6 +67,18 @@ export const internalGetSelectAdminCollection = async () => {
   return selectAdminCollection;
 };
 
+/**
+ * Get the log reviewer admin collection after initialization
+ * @author Yuen Ler Chow
+ */
+export const internalGetLogReviewerAdminCollection = async () => {
+  // Wait for collections to be initialized
+  await collectionsInitialized;
+
+  // Return the log reviewer admin collection
+  return logReviewerAdminCollection;
+};
+
 /*------------------------------------------------------------------------*/
 /* -------------------------------- Main -------------------------------- */
 /*------------------------------------------------------------------------*/
@@ -95,6 +109,7 @@ const initExpressKitCollections = (Collection: typeof MangoCollection) => {
         ],
       },
     );
+
     // Create and store cross server credential collection
     crossServerCredentialCollection = new Collection<CrossServerCredential>(
       'CrossServerCredential',
@@ -102,13 +117,22 @@ const initExpressKitCollections = (Collection: typeof MangoCollection) => {
         uniqueIndexKey: 'key',
       },
     );
+
     // Create and store select admin collection
     selectAdminCollection = new Collection<SelectAdmin>(
       'SelectAdmin',
       {
         uniqueIndexKey: 'id',
-      }
-    )
+      },
+    );
+
+    // Create and store log reviewer admin collection
+    logReviewerAdminCollection = new Collection<LogReviewerAdmin>(
+      'LogReviewerAdmin',
+      {
+        uniqueIndexKey: 'id',
+      },
+    );
 
     // Finished! Resolve the promise
     collectionsInitializedResolve();

@@ -10,7 +10,6 @@ import {
   LogFunction,
   LOG_ROUTE_PATH,
   LOG_REVIEW_STATUS_ROUTE,
-  Log,
   LOG_REVIEW_GET_LOGS_ROUTE,
   ErrorWithCode,
 } from 'dce-reactkit';
@@ -25,6 +24,7 @@ import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
 // Import shared helpers
 import {
   internalGetLogCollection,
+  internalGetLogReviewerAdminCollection,
 } from './initExpressKitCollections';
 
 /*------------------------------------------------------------------------*/
@@ -37,18 +37,10 @@ import {
  * @param opts object containing all arguments
  * @param opts.app express app from inside of the postprocessor function that
  *   we will add routes to
- * @param [opts.logReviewAdmins=all] info on which admins can review
- *   logs from the client. If not included, all Canvas admins are allowed to
- *   review logs. If null, no Canvas admins are allowed to review logs.
- *   If an array of Canvas userIds (numbers), only Canvas admins with those
- *   userIds are allowed to review logs. If a dce-mango collection, only
- *   Canvas admins with entries in that collection ({ userId, ...}) are allowed
- *   to review logs
  */
 const initServer = (
   opts: {
     app: express.Application,
-    logReviewAdmins?: (number[] | Collection<any>),
   },
 ) => {
   /*----------------------------------------*/
@@ -153,22 +145,15 @@ const initServer = (
       return false;
     }
 
-    // If all admins are allowed, we're done
-    if (!opts.logReviewAdmins) {
-      return true;
-    }
+    /* ------- Look Up Credential ------- */
 
-    // Do a dynamic check
+    // Get the log reviewer admin collection
+    const logReviewerAdminCollection = await internalGetLogReviewerAdminCollection();
+
+    // Check if the user is in the log reviewer admin collection
     try {
-      // Array of userIds
-      if (Array.isArray(opts.logReviewAdmins)) {
-        return opts.logReviewAdmins.some((allowedId) => {
-          return (userId === allowedId);
-        });
-      }
-
-      // Must be a collection
-      const matches = await opts.logReviewAdmins.find({ userId });
+      // Must be in the collection
+      const matches = await logReviewerAdminCollection.find({ id: userId });
 
       // Make sure at least one entry matches
       return matches.length > 0;
@@ -187,8 +172,16 @@ const initServer = (
     LOG_REVIEW_STATUS_ROUTE,
     genRouteHandler({
       handler: async ({ params }) => {
-        const { userId, isAdmin } = params;
+        // Destructure params
+        const {
+          userId,
+          isAdmin,
+        } = params;
+
+        // Check if user can review logs
         const canReview = await canReviewLogs(userId, isAdmin);
+
+        // Return result
         return canReview;
       },
     }),
@@ -196,7 +189,8 @@ const initServer = (
 
   /**
    * Get filtered logs based on provided filters
-   * @author Gabe Abrams, Yuen Ler Chow
+   * @author Gabe Abrams
+   * @author Yuen Ler Chow
    * @param pageNumber the page number to get
    * @param filters the filters to apply to the logs
    * @returns {Log[]} list of logs that match the filters
