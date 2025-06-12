@@ -109,6 +109,7 @@ const initExpressKitCollections = (Collection: typeof MangoCollection) => {
         ],
       },
     );
+
     // Create and store cross server credential collection
     crossServerCredentialCollection = new Collection<CrossServerCredential>(
       'CrossServerCredential',
@@ -116,20 +117,23 @@ const initExpressKitCollections = (Collection: typeof MangoCollection) => {
         uniqueIndexKey: 'key',
       },
     );
+
     // Create and store select admin collection
     selectAdminCollection = new Collection<SelectAdmin>(
       'SelectAdmin',
       {
         uniqueIndexKey: 'id',
-      }
-    )
+      },
+    );
+
     // Create and store log reviewer admin collection
     logReviewerAdminCollection = new Collection<LogReviewerAdmin>(
       'LogReviewerAdmin',
       {
         uniqueIndexKey: 'id',
-      }
-    )
+      },
+    );
+
     // Finished! Resolve the promise
     collectionsInitializedResolve();
   } catch (err) {

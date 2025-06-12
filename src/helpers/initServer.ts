@@ -10,7 +10,6 @@ import {
   LogFunction,
   LOG_ROUTE_PATH,
   LOG_REVIEW_STATUS_ROUTE,
-  Log,
   LOG_REVIEW_GET_LOGS_ROUTE,
   ErrorWithCode,
 } from 'dce-reactkit';
@@ -151,10 +150,10 @@ const initServer = (
     // Get the log reviewer admin collection
     const logReviewerAdminCollection = await internalGetLogReviewerAdminCollection();
 
-    // Do a dynamic check
+    // Check if the user is in the log reviewer admin collection
     try {
-      // Must be a collection
-      const matches = await logReviewerAdminCollection.find({ userId });
+      // Must be in the collection
+      const matches = await logReviewerAdminCollection.find({ id: userId });
 
       // Make sure at least one entry matches
       return matches.length > 0;
@@ -173,8 +172,16 @@ const initServer = (
     LOG_REVIEW_STATUS_ROUTE,
     genRouteHandler({
       handler: async ({ params }) => {
-        const { userId, isAdmin } = params;
+        // Destructure params
+        const {
+          userId,
+          isAdmin,
+        } = params;
+
+        // Check if user can review logs
         const canReview = await canReviewLogs(userId, isAdmin);
+
+        // Return result
         return canReview;
       },
     }),
@@ -182,7 +189,8 @@ const initServer = (
 
   /**
    * Get filtered logs based on provided filters
-   * @author Gabe Abrams, Yuen Ler Chow
+   * @author Gabe Abrams
+   * @author Yuen Ler Chow
    * @param pageNumber the page number to get
    * @param filters the filters to apply to the logs
    * @returns {Log[]} list of logs that match the filters
