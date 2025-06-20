@@ -48,14 +48,13 @@ import {
 } from 'dce-reactkit';
 
 // Import helpers
-import initCrossServerCredentialCollection from './helpers/initCrossServerCredentialCollection';
-import initLogCollection from './helpers/initLogCollection';
 import initServer from './helpers/initServer';
 import genRouteHandler from './helpers/genRouteHandler';
 import handleError from './helpers/handleError';
 import handleSuccess from './helpers/handleSuccess';
 import addDBEditorEndpoints from './helpers/addDBEditorEndpoints';
 import visitEndpointOnAnotherServer from './helpers/visitEndpointOnAnotherServer';
+import initExpressKitCollections from './helpers/initExpressKitCollections';
 
 // Import types
 import CrossServerCredential from './types/CrossServerCredential';
@@ -106,8 +105,7 @@ export {
   genRouteHandler,
   handleError,
   handleSuccess,
-  initLogCollection,
-  initCrossServerCredentialCollection,
+  initExpressKitCollections,
   addDBEditorEndpoints,
   visitEndpointOnAnotherServer,
   // Types

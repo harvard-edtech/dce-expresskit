@@ -11,8 +11,7 @@ import oauth from 'oauth-signature';
 import crypto from 'crypto';
 
 // Import shared helpers
-// TODO: import from the initExpressKitCollections instead
-import { internalGetCrossServerCredentialCollection } from './initServer';
+import { internalGetCrossServerCredentialCollection } from './initExpressKitCollections';
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
@@ -241,7 +240,7 @@ export const validateSignedRequest = async (
   /* ------- Look Up Credential ------- */
 
   // Get the cross-server credential collection
-  const crossServerCredentialCollection = internalGetCrossServerCredentialCollection();
+  const crossServerCredentialCollection = await internalGetCrossServerCredentialCollection();
   if (!crossServerCredentialCollection) {
     throw new ErrorWithCode(
       'Could not validate a cross-server request because the cross-server credential collection was not ready in time.',

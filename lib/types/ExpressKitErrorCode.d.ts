@@ -26,6 +26,7 @@ declare enum ExpressKitErrorCode {
     NoOauthLib = "DEK31",
     NoCryptoLib = "DEK32",
     InvalidCrossServerCredentialsFormat = "DEK33",
-    UnknownCrossServerError = "DEK34"
+    UnknownCrossServerError = "DEK34",
+    NotSelectAdmin = "DEK35"
 }
 export default ExpressKitErrorCode;
