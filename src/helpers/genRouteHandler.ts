@@ -388,6 +388,16 @@ const genRouteHandler = (
       );
     }
 
+    // Make sure students don't try to get/change data for other students
+    if (
+      // TODO: user is a student
+      // user has launched (launched is true, launchInfo is defined)
+      // launchInfo.userId not equal to output.userId
+    ) {
+      // return handleError(...) with 401 and a new
+      // ExpressKitErrorCode.StudentCannotAccessOtherUserData
+    }
+
     // Error if user info cannot be found
     if (
       // User information is incomplete
