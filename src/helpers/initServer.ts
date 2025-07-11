@@ -253,7 +253,11 @@ const initServer = (
    */
   opts.app.get(
     SELECT_ADMIN_CHECK_ROUTE,
-    // TODO: add a route that simply returns true
+    genRouteHandler({
+      handler: async () => {
+        return true;
+      },
+    }),
   );
 };
 
