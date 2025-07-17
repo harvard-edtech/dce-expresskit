@@ -13,6 +13,7 @@ enum ExpressKitErrorCode {
   ThemeCheckedBeforeReactKitReady = 'DEK12',
   InvalidParameter = 'DEK5',
   MissingParameter = 'DEK4',
+  StudentCannotAccessOtherUserData = 'DEK13', // TODO: PLACEHOLDER
 
   // Server-to-server requests
   NotConnected = 'DEK14',

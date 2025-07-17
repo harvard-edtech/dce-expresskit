@@ -390,12 +390,23 @@ const genRouteHandler = (
 
     // Make sure students don't try to get/change data for other students
     if (
-      // TODO: user is a student
-      // user has launched (launched is true, launchInfo is defined)
+      // launchInfo is defined
+      launchInfo
+      // launched is true
+      && launched
+      // user is a student
+      && launchInfo.isLearner
       // launchInfo.userId not equal to output.userId
+      && (launchInfo.userId !== output.userId)
     ) {
-      // return handleError(...) with 401 and a new
-      // ExpressKitErrorCode.StudentCannotAccessOtherUserData
+      return handleError(
+        res,
+        {
+          message: 'You cannot access other students\' data. Please log into Canvas and try again.',
+          code: ExpressKitErrorCode.StudentCannotAccessOtherUserData,
+          status: 401,
+        },
+      );
     }
 
     // Error if user info cannot be found
