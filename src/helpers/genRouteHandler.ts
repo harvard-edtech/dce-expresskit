@@ -402,8 +402,8 @@ const genRouteHandler = (
       return handleError(
         res,
         {
-          message: 'You cannot access other students\' data. Please log into Canvas and try again.',
-          code: ExpressKitErrorCode.StudentCannotAccessOtherUserData,
+          message: 'We encountered a student ID mismatch and cannot proceed with that action. Please start over and try again.',
+          code: ExpressKitErrorCode.StudentIdMismatch,
           status: 401,
         },
       );
