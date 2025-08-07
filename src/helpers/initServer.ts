@@ -64,6 +64,10 @@ const initServer = (
    * @param {string} [target] Target of the action (each app determines the list
    *   of targets) These are usually buttons, panels, elements, etc.
    * @param {LogAction} [action] the type of action performed on the target
+   * @param {object} [overriddenUserInfo] object containing info to override
+   * @param {number} [opts.userId] overriding Canvas id of the user performing the action
+   * @param {string} [opts.userFirstName] overriding first name of the user performing the action
+   * @param {string} [opts.userLastName] overriding last name of the user performing the action
    * @returns {Log}
    */
   opts.app.post(
@@ -80,6 +84,7 @@ const initServer = (
         errorStack: ParamType.StringOptional,
         target: ParamType.StringOptional,
         action: ParamType.StringOptional,
+        overriddenUserInfo: ParamType.JSONOptional,
       },
       handler: ({ params, logServerEvent }) => {
         // Create log info
@@ -97,6 +102,9 @@ const initServer = (
                 code: params.errorCode,
                 stack: params.errorStack,
               },
+              userId: (params.overriddenUserInfo ? params.overriddenUserInfo.userId : undefined),
+              userFirstName: (params.overriddenUserInfo ? params.overriddenUserInfo.userFirstName : undefined),
+              userLastName: (params.overriddenUserInfo ? params.overriddenUserInfo.userLastName : undefined),
             }
             // Action
             : {
@@ -107,6 +115,9 @@ const initServer = (
               metadata: params.metadata,
               target: params.target,
               action: params.action,
+              userId: (params.overriddenUserInfo ? params.overriddenUserInfo.userId : undefined),
+              userFirstName: (params.overriddenUserInfo ? params.overriddenUserInfo.userFirstName : undefined),
+              userLastName: (params.overriddenUserInfo ? params.overriddenUserInfo.userLastName : undefined),
             }
         );
 

@@ -1,7 +1,6 @@
 // Import dce-reactkit
 import {
   getTimeInfoInET,
-  LogFunction,
   Log,
   LogType,
   LogTypeSpecificInfo,
@@ -13,13 +12,14 @@ import {
   ParamType,
   ReactKitErrorCode,
   LogSource,
+  LogFunction,
 } from 'dce-reactkit';
 
 // Import caccl
 import { getLaunchInfo } from 'caccl/server';
 
 // Import caccl functions
-import initExpressKitCollections, { internalGetLogCollection, internalGetSelectAdminCollection } from './initExpressKitCollections';
+import { internalGetLogCollection, internalGetSelectAdminCollection } from './initExpressKitCollections';
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
@@ -619,13 +619,27 @@ const genRouteHandler = (
           minute,
         } = getTimeInfoInET();
 
+        // Get user info
+        let userId = (launchInfo ? launchInfo.userId : -1);
+        if (logOpts.userId) {
+          userId = logOpts.userId;
+        }
+        let userFirstName = (launchInfo ? launchInfo.userFirstName : 'unknown');
+        if (logOpts.userFirstName) {
+          userFirstName = logOpts.userFirstName;
+        }
+        let userLastName = (launchInfo ? launchInfo.userLastName : 'unknown');
+        if (logOpts.userLastName) {
+          userLastName = logOpts.userLastName;
+        }
+
         // Main log info
         const mainLogInfo: LogMainInfo = {
           id: `${launchInfo ? launchInfo.userId : 'unknown'}-${Date.now()}-${Math.floor(Math.random() * 100000)}-${Math.floor(Math.random() * 100000)}`,
-          userFirstName: (launchInfo ? launchInfo.userFirstName : 'unknown'),
-          userLastName: (launchInfo ? launchInfo.userLastName : 'unknown'),
+          userFirstName,
+          userLastName,
           userEmail: (launchInfo ? launchInfo.userEmail : 'unknown'),
-          userId: (launchInfo ? launchInfo.userId : -1),
+          userId,
           isLearner: (launchInfo && !!launchInfo.isLearner),
           isAdmin: (launchInfo && !!launchInfo.isAdmin),
           isTTM: (launchInfo && !!launchInfo.isTTM),
