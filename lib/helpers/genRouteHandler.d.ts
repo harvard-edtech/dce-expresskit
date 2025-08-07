@@ -1,4 +1,4 @@
-import { LogFunction, ParamType } from 'dce-reactkit';
+import { ParamType, LogFunction } from 'dce-reactkit';
 /**
  * Generate an express API route handler
  * @author Gabe Abrams
