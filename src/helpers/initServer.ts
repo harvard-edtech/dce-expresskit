@@ -1,9 +1,6 @@
 // Import express
 import express from 'express';
 
-// Import dce-mango
-import { Collection } from 'dce-mango';
-
 // Import dce-reactkit
 import {
   ParamType,
