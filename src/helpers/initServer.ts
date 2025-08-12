@@ -1,9 +1,6 @@
 // Import express
 import express from 'express';
 
-// Import dce-mango
-import { Collection } from 'dce-mango';
-
 // Import dce-reactkit
 import {
   ParamType,
@@ -11,6 +8,7 @@ import {
   LOG_ROUTE_PATH,
   LOG_REVIEW_STATUS_ROUTE,
   LOG_REVIEW_GET_LOGS_ROUTE,
+  SELECT_ADMIN_CHECK_ROUTE,
   ErrorWithCode,
 } from 'dce-reactkit';
 
@@ -235,6 +233,26 @@ const initServer = (
 
         // Return response
         return response;
+      },
+    }),
+  );
+
+  /*----------------------------------------*/
+  /* --------- Select Admin Routes -------- */
+  /*----------------------------------------*/
+
+  /**
+   * Check if the current user is a select admin
+   * @author Gardenia Liu
+   * @returns {boolean} true if user is a select admin. If the user is not
+   *   a select admin, simply because this route starts with the select admin
+   *   prefix, it will result in an error
+   */
+  opts.app.get(
+    SELECT_ADMIN_CHECK_ROUTE,
+    genRouteHandler({
+      handler: async () => {
+        return true;
       },
     }),
   );
