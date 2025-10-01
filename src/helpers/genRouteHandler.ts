@@ -396,6 +396,10 @@ const genRouteHandler = (
       && launched
       // user is a student
       && launchInfo.isLearner
+      // output is defined
+      && output
+      // output.userId is defined
+      && output.userId
       // launchInfo.userId not equal to output.userId
       && (launchInfo.userId !== output.userId)
     ) {
