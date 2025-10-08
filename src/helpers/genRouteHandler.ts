@@ -658,7 +658,7 @@ const genRouteHandler = (
 
         // Type-specific info
         const typeSpecificInfo: LogTypeSpecificInfo = (
-          ('error' in opts && opts.error)
+          ('error' in logOpts && logOpts.error)
             ? {
               type: LogType.Error,
               errorMessage: (logOpts as any).error.message ?? 'Unknown message',
