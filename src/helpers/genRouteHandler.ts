@@ -398,13 +398,14 @@ const genRouteHandler = (
       && launchInfo.isLearner
       // output.userId is defined
       && output.userId
-      // launchInfo.userId not equal to output.userId
+      // the launchInfo userId is the "input" userId, check if the request
+      // output userId differs from the launchInfo userId
       && (launchInfo.userId !== output.userId)
     ) {
       return handleError(
         res,
         {
-          message: 'We encountered a student ID mismatch and cannot proceed with that action. Please start over and try again.',
+          message: 'We encountered a student ID mismatch. Please refresh or try the action again. Contact support if this issue persists.',
           code: ExpressKitErrorCode.StudentIdMismatch,
           status: 401,
         },
