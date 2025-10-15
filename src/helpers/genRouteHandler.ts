@@ -388,6 +388,30 @@ const genRouteHandler = (
       );
     }
 
+    // Make sure students don't try to get/change data for other students
+    if (
+      // launchInfo is defined
+      launchInfo
+      // launched is true
+      && launched
+      // user is a student
+      && launchInfo.isLearner
+      // output.userId is defined
+      && output.userId
+      // the launchInfo userId is the "input" userId, check if the request
+      // output userId differs from the launchInfo userId
+      && (launchInfo.userId !== output.userId)
+    ) {
+      return handleError(
+        res,
+        {
+          message: 'We encountered a student ID mismatch. Please refresh or try the action again. Contact support if this issue persists.',
+          code: ExpressKitErrorCode.StudentIdMismatch,
+          status: 401,
+        },
+      );
+    }
+
     // Error if user info cannot be found
     if (
       // User information is incomplete

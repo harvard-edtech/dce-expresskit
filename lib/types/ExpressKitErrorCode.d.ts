@@ -10,6 +10,7 @@ declare enum ExpressKitErrorCode {
     ThemeCheckedBeforeReactKitReady = "DEK12",
     InvalidParameter = "DEK5",
     MissingParameter = "DEK4",
+    StudentIdMismatch = "DEK36",
     NotConnected = "DEK14",
     SelfSigned = "DEK15",
     ResponseParseError = "DEK16",

@@ -1,4 +1,4 @@
-// Highest error code = DEK34
+// Highest error code = DEK36
 
 /**
  * List of error codes built into the express kit
@@ -13,6 +13,7 @@ enum ExpressKitErrorCode {
   ThemeCheckedBeforeReactKitReady = 'DEK12',
   InvalidParameter = 'DEK5',
   MissingParameter = 'DEK4',
+  StudentIdMismatch = 'DEK36',
 
   // Server-to-server requests
   NotConnected = 'DEK14',
