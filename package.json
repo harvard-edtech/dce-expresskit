@@ -1,6 +1,6 @@
 {
   "name": "dce-expresskit",
-  "version": "4.2.4-beta.heat-seek.1",
+  "version": "4.2.4-beta.heat-seek.2",
   "description": "Shared functions, helpers, and tools for Harvard DCE Express-based servers",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -25,7 +25,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "bootstrap": "^5.3.3",
-    "dce-reactkit": "^4.2.4-beta.heat-seek.1",
+    "dce-reactkit": "4.2.4-beta.heat-seek.1",
     "react": "^19.0.0"
   },
   "peerDependencies": {
