@@ -1,10 +1,10 @@
 // Import express
 import express from 'express';
 
-// Import dce-reactkit
+// Import dce-commonkit
 import {
   ParamType,
-} from 'dce-reactkit';
+} from 'dce-commonkit';
 
 // Import shared helpers
 import genRouteHandler from '../genRouteHandler';

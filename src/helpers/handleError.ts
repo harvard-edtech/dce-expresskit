@@ -1,6 +1,5 @@
 // Import shared types
-import { ReactKitErrorCode } from 'dce-reactkit';
-import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
+import { CommonKitErrorCode } from 'dce-commonkit';
 
 /**
  * Handle an error and respond to the client
@@ -42,7 +41,7 @@ const handleError = (
   }
 
   // Get the error code
-  const code = (error.code || ReactKitErrorCode.NoCode);
+  const code = (error.code || CommonKitErrorCode.NoCode);
 
   // Get the status code
   const status = (error.status || 500);

@@ -1,5 +1,5 @@
 import { Collection } from 'dce-mango';
-import { Log, LogReviewerFilterState } from 'dce-reactkit';
+import { Log, LogReviewerFilterState } from 'dce-commonkit';
 /**
  * Get logs for the log reviewer interface
  * @author Yuen Ler Chow

@@ -1,5 +1,5 @@
 import { Collection as MangoCollection } from 'dce-mango';
-import { Log } from 'dce-reactkit';
+import { Log } from 'dce-commonkit';
 import CrossServerCredential from '../types/CrossServerCredential';
 import SelectAdmin from '../types/SelectAdmin';
 import LogReviewerAdmin from '../types/LogReviewerAdmin';

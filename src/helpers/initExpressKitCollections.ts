@@ -1,8 +1,8 @@
 // Import dce-mango
 import { Collection as MangoCollection } from 'dce-mango';
 
-// Import dce-reactkit
-import { Log } from 'dce-reactkit';
+// Import dce-commonkit
+import { Log } from 'dce-commonkit';
 
 // Import shared types
 import CrossServerCredential from '../types/CrossServerCredential';
