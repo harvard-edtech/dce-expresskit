@@ -730,10 +730,10 @@ const genRouteHandler = (
         } else if (log.type === LogType.Error) {
           // Print to console
           // eslint-disable-next-line no-console
-          console.error('dce-commonkit error log:', log);
+          console.error('dce error log:', log);
         } else {
           // eslint-disable-next-line no-console
-          console.log('dce-commonkit action log:', log);
+          console.log('dce action log:', log);
         }
 
         // Return log entry
