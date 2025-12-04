@@ -1,6 +1,6 @@
 import express from 'express';
 /**
- * Prepare dce-reactkit to run on the server
+ * Prepare dce-commonkit to run on the server
  * @author Gabe Abrams
  * @param opts object containing all arguments
  * @param opts.app express app from inside of the postprocessor function that

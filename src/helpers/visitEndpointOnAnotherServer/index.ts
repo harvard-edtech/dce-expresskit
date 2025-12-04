@@ -1,8 +1,8 @@
-// Import dce-reactkit
+// Import dce-commonkit
 import {
   ErrorWithCode,
-  ReactKitErrorCode,
-} from 'dce-reactkit';
+  CommonKitErrorCode,
+} from 'dce-commonkit';
 
 // Import shared types
 import sendServerToServerRequest from './sendServerToServerRequest';
@@ -43,7 +43,7 @@ const visitEndpointOnAnotherServer = async (
   if (!response || !response.body) {
     throw new ErrorWithCode(
       'We didn\'t get a response from the other server. Please check the network between the two connection.',
-      ReactKitErrorCode.NoResponse,
+      CommonKitErrorCode.NoResponse,
     );
   }
   if (!response.body.success) {
@@ -55,7 +55,7 @@ const visitEndpointOnAnotherServer = async (
       ),
       (
         response.body.code
-        || ReactKitErrorCode.NoCode
+        || CommonKitErrorCode.NoCode
       ),
     );
   }

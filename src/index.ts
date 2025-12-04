@@ -1,4 +1,4 @@
-// Import dce-reactkit
+// Import dce-commonkit
 import {
   abbreviate,
   avg,
@@ -46,7 +46,7 @@ import {
   DAY_IN_MS,
   ErrorWithCode,
   ParamType,
-} from 'dce-reactkit';
+} from 'dce-commonkit';
 
 // Import helpers
 import initServer from './helpers/initServer';

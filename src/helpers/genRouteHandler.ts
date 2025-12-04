@@ -1,4 +1,4 @@
-// Import dce-reactkit
+// Import dce-commonkit
 import {
   getTimeInfoInET,
   LogFunction,
@@ -11,9 +11,9 @@ import {
   LogAction,
   LogLevel,
   ParamType,
-  ReactKitErrorCode,
+  CommonKitErrorCode,
   LogSource,
-} from 'dce-reactkit';
+} from 'dce-commonkit';
 
 // Import caccl
 import { getLaunchInfo } from 'caccl/server';
@@ -382,7 +382,7 @@ const genRouteHandler = (
         res,
         {
           message: 'Your session has expired. Please refresh the page and try again.',
-          code: ReactKitErrorCode.SessionExpired,
+          code: CommonKitErrorCode.SessionExpired,
           status: 401,
         },
       );
@@ -437,7 +437,7 @@ const genRouteHandler = (
         res,
         {
           message: 'Your session was invalid. Please refresh the page and try again.',
-          code: ReactKitErrorCode.SessionExpired,
+          code: CommonKitErrorCode.SessionExpired,
           status: 401,
         },
       );
@@ -686,7 +686,7 @@ const genRouteHandler = (
             ? {
               type: LogType.Error,
               errorMessage: (logOpts as any).error.message ?? 'Unknown message',
-              errorCode: (logOpts as any).error.code ?? ReactKitErrorCode.NoCode,
+              errorCode: (logOpts as any).error.code ?? CommonKitErrorCode.NoCode,
               errorStack: (logOpts as any).error.stack ?? 'No stack',
             }
             : {
@@ -730,10 +730,10 @@ const genRouteHandler = (
         } else if (log.type === LogType.Error) {
           // Print to console
           // eslint-disable-next-line no-console
-          console.error('dce-reactkit error log:', log);
+          console.error('dce-commonkit error log:', log);
         } else {
           // eslint-disable-next-line no-console
-          console.log('dce-reactkit action log:', log);
+          console.log('dce-commonkit action log:', log);
         }
 
         // Return log entry
@@ -840,7 +840,7 @@ const genRouteHandler = (
      * @param [renderOpts.title=An Error Occurred] title of the error box
      * @param [renderOpts.description=An unknown server error occurred. Please contact support.]
      *   a human-readable description of the error
-     * @param [renderOpts.code=ReactKitErrorCode.NoCode] error code to show
+     * @param [renderOpts.code=CommonKitErrorCode.NoCode] error code to show
      * @param [renderOpts.pageTitle=renderOpts.title] title of the page/tab if it differs from
      *   the title of the error
      * @param [renderOpts.status=500] http status code

@@ -1,10 +1,10 @@
 // Import libs
 import qs from 'qs';
 
-// Import dce-reactkit
+// Import dce-commonkit
 import {
   ErrorWithCode,
-} from 'dce-reactkit';
+} from 'dce-commonkit';
 
 // Import data signer
 import { signRequest } from '../dataSigner';
