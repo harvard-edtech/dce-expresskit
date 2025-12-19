@@ -25,7 +25,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "bootstrap": "^5.3.3",
-    "dce-reactkit": "^4.3.1",
+    "dce-reactkit": "^4.3.4",
     "react": "^19.2.1"
   },
   "peerDependencies": {
