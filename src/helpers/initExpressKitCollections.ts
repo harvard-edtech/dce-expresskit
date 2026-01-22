@@ -80,6 +80,23 @@ export const internalGetLogReviewerAdminCollection = async () => {
 };
 
 /*------------------------------------------------------------------------*/
+/* ----------------------- Public Collection Getters -------------------- */
+/*------------------------------------------------------------------------*/
+
+/**
+ * Get the log collection. Resolves after the collection has been initialized
+ * @author Yuen Ler Chow
+ * @returns a promise that resolves with the log collection
+ */
+export const getLogCollection = async () => {
+  // Wait for collections to be initialized
+  await collectionsInitialized;
+
+  // Return the log collection
+  return logCollection;
+};
+
+/*------------------------------------------------------------------------*/
 /* -------------------------------- Main -------------------------------- */
 /*------------------------------------------------------------------------*/
 
