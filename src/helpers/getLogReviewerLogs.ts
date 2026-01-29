@@ -1,13 +1,13 @@
 // Import dce-mango
 import { Collection } from 'dce-mango';
 
-// Import dce-reactkit
+// Import dce-commonkit
 import {  
   DAY_IN_MS,
   Log,
   LogReviewerFilterState, 
   LogType 
-} from 'dce-reactkit';
+} from 'dce-commonkit';
 
 // Import shared types
 import LOG_REVIEW_PAGE_SIZE from '../constants/LOG_REVIEW_PAGE_SIZE';

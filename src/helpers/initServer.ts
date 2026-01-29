@@ -1,7 +1,7 @@
 // Import express
 import express from 'express';
 
-// Import dce-reactkit
+// Import dce-commonkit
 import {
   ParamType,
   LogFunction,
@@ -10,7 +10,7 @@ import {
   LOG_REVIEW_GET_LOGS_ROUTE,
   SELECT_ADMIN_CHECK_ROUTE,
   ErrorWithCode,
-} from 'dce-reactkit';
+} from 'dce-commonkit';
 
 // Import shared helpers
 import genRouteHandler from './genRouteHandler';
@@ -30,7 +30,7 @@ import {
 /*------------------------------------------------------------------------*/
 
 /**
- * Prepare dce-reactkit to run on the server
+ * Prepare dce-commonkit to run on the server
  * @author Gabe Abrams
  * @param opts object containing all arguments
  * @param opts.app express app from inside of the postprocessor function that

@@ -1,8 +1,8 @@
-// Import dce-reactkit
+// Import dce-commonkit
 import {
   ErrorWithCode,
   MINUTE_IN_MS,
-} from 'dce-reactkit';
+} from 'dce-commonkit';
 
 // Import oauth
 import oauth from 'oauth-signature';
