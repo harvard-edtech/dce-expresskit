@@ -55,7 +55,7 @@ import handleError from './helpers/handleError';
 import handleSuccess from './helpers/handleSuccess';
 import addDBEditorEndpoints from './helpers/addDBEditorEndpoints';
 import visitEndpointOnAnotherServer from './helpers/visitEndpointOnAnotherServer';
-import initExpressKitCollections from './helpers/initExpressKitCollections';
+import initExpressKitCollections, { getLogCollection } from './helpers/initExpressKitCollections';
 
 // Import types
 import CrossServerCredential from './types/CrossServerCredential';
@@ -108,6 +108,7 @@ export {
   handleError,
   handleSuccess,
   initExpressKitCollections,
+  getLogCollection,
   addDBEditorEndpoints,
   visitEndpointOnAnotherServer,
   // Types

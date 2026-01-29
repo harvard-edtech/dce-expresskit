@@ -24,6 +24,12 @@ export declare const internalGetSelectAdminCollection: () => Promise<MangoCollec
  */
 export declare const internalGetLogReviewerAdminCollection: () => Promise<MangoCollection<LogReviewerAdmin>>;
 /**
+ * Get the log collection. Resolves after the collection has been initialized
+ * @author Yuen Ler Chow
+ * @returns a promise that resolves with the log collection
+ */
+export declare const getLogCollection: () => Promise<MangoCollection<Log>>;
+/**
  * Initialize all collections required for expresskit
  * @author Gardenia Liu
  * @author Gabe Abrams
