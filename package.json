@@ -1,6 +1,6 @@
 {
   "name": "dce-expresskit",
-  "version": "4.4.4",
+  "version": "5.0.0",
   "description": "Shared functions, helpers, and tools for Harvard DCE Express-based servers",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -20,7 +20,7 @@
     "Toolkit"
   ],
   "dependencies": {
-    "dce-commonkit": "^4.4.4"
+    "dce-commonkit": "^5.0.0"
   },
   "peerDependencies": {
     "caccl": "^x.x.x",
