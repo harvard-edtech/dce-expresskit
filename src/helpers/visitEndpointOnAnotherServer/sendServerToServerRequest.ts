@@ -61,11 +61,19 @@ const parseCredentials = (credentialsStr: string) => {
       }
 
       // Add the credential to the array
-      credentials.push({
-        host: parts[0].trim(),
-        key: parts[1].trim(),
-        secret: parts[2].trim(),
+      // (don't add duplicates)
+      const alreadyExists = credentials.find((cred) => {
+        return (
+          cred.host === parts[0].trim()
+        );
       });
+      if (!alreadyExists) {
+        credentials.push({
+          host: parts[0].trim(),
+          key: parts[1].trim(),
+          secret: parts[2].trim(),
+        });
+      }
     });
 };
 
