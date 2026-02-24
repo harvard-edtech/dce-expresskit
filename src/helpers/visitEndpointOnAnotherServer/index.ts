@@ -20,6 +20,9 @@ import sendServerToServerRequest from './sendServerToServerRequest';
  * @param opts.host the host of the other server
  * @param [opts.params={}] query/body parameters to include
  * @param [opts.responseType=JSON] the response type from the other server
+ * @param [opts.dceKitCrossServerCredentials] additional cross-server credentials
+ *   that aren't in the env var list
+ * @returns the body of the response from the other server
  */
 const visitEndpointOnAnotherServer = async (
   opts: {
@@ -28,6 +31,7 @@ const visitEndpointOnAnotherServer = async (
     host: string,
     params?: { [key in string]: any },
     responseType?: 'JSON' | 'Text',
+    dceKitCrossServerCredentials?: string,
   },
 ): Promise<any> => {
   // Send the request
@@ -37,6 +41,7 @@ const visitEndpointOnAnotherServer = async (
     method: opts.method,
     params: opts.params,
     responseType: opts.responseType,
+    dceKitCrossServerCredentials: opts.dceKitCrossServerCredentials,
   });
 
   // Check for failure

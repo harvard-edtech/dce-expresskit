@@ -7,6 +7,8 @@
  * @param [opts.method=GET] http method to use
  * @param [opts.params] body/data to include in the request
  * @param [opts.responseType=JSON] expected response type
+ * @param [opts.dceKitCrossServerCredentials] additional cross-server credentials
+ *   that aren't in the env var list
  * @returns { body, status, headers } on success
  */
 declare const sendServerToServerRequest: (opts: {
@@ -15,6 +17,7 @@ declare const sendServerToServerRequest: (opts: {
     method?: ("GET" | "POST" | "PUT" | "DELETE");
     params?: { [k in string]: any; };
     responseType?: "Text" | "JSON";
+    dceKitCrossServerCredentials?: string;
 }) => Promise<{
     body: any;
     status: number;

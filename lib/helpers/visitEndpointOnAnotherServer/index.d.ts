@@ -7,6 +7,9 @@
  * @param opts.host the host of the other server
  * @param [opts.params={}] query/body parameters to include
  * @param [opts.responseType=JSON] the response type from the other server
+ * @param [opts.dceKitCrossServerCredentials] additional cross-server credentials
+ *   that aren't in the env var list
+ * @returns the body of the response from the other server
  */
 declare const visitEndpointOnAnotherServer: (opts: {
     method: "GET" | "POST" | "DELETE" | "PUT";
@@ -14,5 +17,6 @@ declare const visitEndpointOnAnotherServer: (opts: {
     host: string;
     params?: { [key in string]: any; };
     responseType?: "JSON" | "Text";
+    dceKitCrossServerCredentials?: string;
 }) => Promise<any>;
 export default visitEndpointOnAnotherServer;

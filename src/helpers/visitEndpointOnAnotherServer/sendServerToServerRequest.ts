@@ -25,37 +25,52 @@ const credentials: {
   host: string,
   key: string,
   secret: string,
-}[] = (
-    (process.env.DCEKIT_CROSS_SERVER_CREDENTIALS ?? '')
-      // Replace multiple | with a single one
-      .replace(/\|+/g, '|')
-      // Split by |
-      .split('|')
-      // Remove empty strings
-      .filter((str) => {
-        return str.trim().length > 0;
-      })
-      // Process each credential
-      .map((str) => {
-        // Split by :
-        const parts = str.split(':');
+}[] = [];
 
-        // Check for errors
-        if (parts.length !== 3) {
-          throw new ErrorWithCode(
-            'Invalid DCEKIT_CROSS_SERVER_CREDENTIALS format. Each credential must be in the format |host:key:secret|',
-            ExpressKitErrorCode.InvalidCrossServerCredentialsFormat,
-          );
-        }
+/*------------------------------------------------------------------------*/
+/* ------------------------------- Helpers ------------------------------ */
+/*------------------------------------------------------------------------*/
 
-        // Return the credential
-        return {
-          host: parts[0].trim(),
-          key: parts[1].trim(),
-          secret: parts[2].trim(),
-        };
-      })
-  );
+/**
+ * Parse a credentials string into an array of credentials
+ * @author Gabe Abrams
+ * @param credentialsStr the credentials string to parse
+ * @returns an array of credentials
+ */
+const parseCredentials = (credentialsStr: string) => {
+  credentialsStr
+    // Replace multiple | with a single one
+    .replace(/\|+/g, '|')
+    // Split by |
+    .split('|')
+    // Remove empty strings
+    .filter((str) => {
+      return str.trim().length > 0;
+    })
+    // Process each credential
+    .forEach((str) => {
+      // Split by :
+      const parts = str.split(':');
+
+      // Check for errors
+      if (parts.length !== 3) {
+        throw new ErrorWithCode(
+          'Invalid DCEKIT_CROSS_SERVER_CREDENTIALS format. Each credential must be in the format |host:key:secret|',
+          ExpressKitErrorCode.InvalidCrossServerCredentialsFormat,
+        );
+      }
+
+      // Add the credential to the array
+      credentials.push({
+        host: parts[0].trim(),
+        key: parts[1].trim(),
+        secret: parts[2].trim(),
+      });
+    });
+};
+
+// Auto-parse credentials from env variable
+parseCredentials(process.env.DCEKIT_CROSS_SERVER_CREDENTIALS ?? '');
 
 /*------------------------------------------------------------------------*/
 /* ------------------------------- Helpers ------------------------------ */
@@ -96,6 +111,8 @@ const getCrossServerCredential = (host: string) => {
  * @param [opts.method=GET] http method to use
  * @param [opts.params] body/data to include in the request
  * @param [opts.responseType=JSON] expected response type
+ * @param [opts.dceKitCrossServerCredentials] additional cross-server credentials
+ *   that aren't in the env var list
  * @returns { body, status, headers } on success
  */
 const sendServerToServerRequest = async (
@@ -105,12 +122,18 @@ const sendServerToServerRequest = async (
     method?: ('GET' | 'POST' | 'PUT' | 'DELETE'),
     params?: { [k in string]: any },
     responseType?: 'Text' | 'JSON',
+    dceKitCrossServerCredentials?: string,
   },
 ): Promise<{
   body: any,
   status: number,
   headers: { [k in string]: any },
 }> => {
+  // If additional credentials were provided, parse them and add to the list
+  if (opts.dceKitCrossServerCredentials) {
+    parseCredentials(opts.dceKitCrossServerCredentials);
+  }
+
   // Process method
   const method: ('GET' | 'POST' | 'PUT' | 'DELETE') = (opts.method || 'GET');
 
