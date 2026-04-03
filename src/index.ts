@@ -46,6 +46,7 @@ import {
   DAY_IN_MS,
   ErrorWithCode,
   ParamType,
+  spaceAtCapitals,
 } from 'dce-commonkit';
 
 // Import helpers
@@ -102,6 +103,7 @@ export {
   someAsync,
   capitalize,
   shuffleArray,
+  spaceAtCapitals,
   // Server helpers
   initServer,
   genRouteHandler,
