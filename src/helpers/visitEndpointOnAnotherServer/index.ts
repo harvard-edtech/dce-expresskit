@@ -34,12 +34,21 @@ const visitEndpointOnAnotherServer = async (
     dceKitCrossServerCredentials?: string,
   },
 ): Promise<any> => {
+  // Sanitize params: remove undefined values
+  const sanitizedParams: { [key in string]: any } = {};
+  Object.keys(opts.params ?? {}).forEach((key) => {
+    const value = opts.params?.[key];
+    if (value !== undefined) {
+      sanitizedParams[key] = value;
+    }
+  });
+
   // Send the request
   const response = await sendServerToServerRequest({
     path: opts.path,
     host: opts.host,
     method: opts.method,
-    params: opts.params,
+    params: sanitizedParams,
     responseType: opts.responseType,
     dceKitCrossServerCredentials: opts.dceKitCrossServerCredentials,
   });
@@ -47,7 +56,7 @@ const visitEndpointOnAnotherServer = async (
   // Check for failure
   if (!response || !response.body) {
     throw new ErrorWithCode(
-      'We didn\'t get a response from the other server. Please check the network between the two connection.',
+      'We didn\'t get a response from the other server. Please check the network between the two servers.',
       CommonKitErrorCode.NoResponse,
     );
   }
