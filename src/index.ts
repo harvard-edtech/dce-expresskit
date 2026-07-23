@@ -58,9 +58,16 @@ import handleSuccess from './helpers/handleSuccess';
 import addDBEditorEndpoints from './helpers/addDBEditorEndpoints';
 import visitEndpointOnAnotherServer from './helpers/visitEndpointOnAnotherServer';
 import initExpressKitCollections, { getLogCollection } from './helpers/initExpressKitCollections';
+import { genCourseContext, verifyCourseContextToken } from './helpers/courseContext';
+import addCourseContextEndpoint from './helpers/addCourseContextEndpoint';
+
+// Import constants
+import COURSE_CONTEXT_HEADER from './constants/COURSE_CONTEXT_HEADER';
 
 // Import types
 import CrossServerCredential from './types/CrossServerCredential';
+import VerifiedCourseAuth from './types/VerifiedCourseAuth';
+import CourseContextTokenPayload from './types/CourseContextTokenPayload';
 
 // Export each item
 export {
@@ -115,6 +122,11 @@ export {
   getLogCollection,
   addDBEditorEndpoints,
   visitEndpointOnAnotherServer,
+  // Course context (per-tab course authorization)
+  genCourseContext,
+  verifyCourseContextToken,
+  addCourseContextEndpoint,
+  COURSE_CONTEXT_HEADER,
   // Types
   DayOfWeek,
   Log,
@@ -125,6 +137,8 @@ export {
   LogMetadataType,
   LogFunction,
   CrossServerCredential,
+  VerifiedCourseAuth,
+  CourseContextTokenPayload,
   // Server types
   ParamType,
 };

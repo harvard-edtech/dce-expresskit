@@ -23,6 +23,10 @@ import initExpressKitCollections, { internalGetLogCollection, internalGetSelectA
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
+import VerifiedCourseAuth from '../types/VerifiedCourseAuth';
+
+// Import shared constants
+import COURSE_CONTEXT_HEADER from '../constants/COURSE_CONTEXT_HEADER';
 
 // Import helpers
 import handleError from './handleError';
@@ -31,6 +35,7 @@ import genErrorPage from '../html/genErrorPage';
 import genInfoPage from '../html/genInfoPage';
 import parseUserAgent from './parseUserAgent';
 import { validateSignedRequest } from './dataSigner';
+import { verifyCourseContextToken } from './courseContext';
 
 /**
  * Generate an express API route handler
@@ -517,12 +522,81 @@ const genRouteHandler = (
     });
 
     /*----------------------------------------*/
+    /* -------- Verified Course Auth -------- */
+    /*----------------------------------------*/
+
+    // A consumer app may attach an already-verified, per-request course
+    // authorization to req.verifiedCourseAuth. This supports having multiple
+    // browser tabs open on different courses at once: the single shared CACCL
+    // session can only represent one launched course, but each request can carry
+    // its own verified course context.
+    //
+    // When present, we trust it over the shared session launch for this
+    // request's course + role fields. When absent, every branch below behaves
+    // exactly as it did before, so this is fully backward compatible.
+    //
+    // There are two ways this field gets populated:
+    //   1. Library-owned (preferred): the client sends a signed course-context
+    //      token in the COURSE_CONTEXT_HEADER header. We verify it here (see
+    //      below) and populate req.verifiedCourseAuth ourselves, so the app
+    //      writes no crypto and the library owns the trust boundary.
+    //   2. App-set (interim): the app verifies something itself and sets
+    //      req.verifiedCourseAuth before this handler runs. Still honored for
+    //      backward compatibility during migration onto the token path.
+
+    // Library-owned path: verify a signed course-context token, if one was sent
+    // and the app has not already attached a verified auth. We require a launch
+    // so we can bind the token to the current session user.
+    if (!req.verifiedCourseAuth && launchInfo) {
+      const courseContextToken = req.headers?.[COURSE_CONTEXT_HEADER.toLowerCase()];
+      if (typeof courseContextToken === 'string' && courseContextToken.length > 0) {
+        try {
+          req.verifiedCourseAuth = verifyCourseContextToken({
+            token: courseContextToken,
+            expectedUserId: launchInfo.userId,
+          });
+        } catch (err) {
+          // A present-but-invalid token is an auth failure (401), not a 500
+          return handleError(
+            res,
+            {
+              message: (err as any).message,
+              code: (err as any).code,
+              status: 401,
+            },
+          );
+        }
+      }
+    }
+
+    // PHASE 0 TRUST CONTRACT (app-set path only): when the app sets this field
+    // directly, the app is responsible for verifying it first (see
+    // VerifiedCourseAuth for details). The library-owned token path above does
+    // this verification for you.
+    const verifiedCourseAuth: VerifiedCourseAuth | undefined = (
+      req.verifiedCourseAuth
+    );
+    if (verifiedCourseAuth) {
+      output.courseId = verifiedCourseAuth.courseId;
+      output.isLearner = verifiedCourseAuth.isLearner;
+      output.isTTM = verifiedCourseAuth.isTTM;
+      output.isAdmin = verifiedCourseAuth.isAdmin;
+      // Only override the course name if the verified auth carries one
+      if (verifiedCourseAuth.courseName !== undefined) {
+        output.courseName = verifiedCourseAuth.courseName;
+      }
+    }
+
+    /*----------------------------------------*/
     /* ----- Require Course Consistency ----- */
     /*----------------------------------------*/
 
-    // Make sure the user actually launched from the appropriate course
+    // Make sure the user actually launched from the appropriate course.
+    // If a verified per-request course auth is present, it already proves which
+    // course this request is about, so we skip this session-based check.
     if (
-      output.courseId
+      !verifiedCourseAuth
+      && output.courseId
       && launchInfo
       && launchInfo.courseId
       && output.courseId !== launchInfo.courseId
@@ -643,6 +717,37 @@ const genRouteHandler = (
           minute,
         } = getTimeInfoInET();
 
+        // Determine the course + role values to log. When a verified per-request
+        // course auth is present, it (not the shared session launch) reflects the
+        // course and roles this request actually acted on, so we log those for an
+        // accurate audit trail. The course name is logged from the verified auth
+        // when it carries one, otherwise it falls back to the session launch.
+        const logIsLearner = !!(
+          verifiedCourseAuth
+            ? verifiedCourseAuth.isLearner
+            : (launchInfo && launchInfo.isLearner)
+        );
+        const logIsTTM = !!(
+          verifiedCourseAuth
+            ? verifiedCourseAuth.isTTM
+            : (launchInfo && launchInfo.isTTM)
+        );
+        const logIsAdmin = !!(
+          verifiedCourseAuth
+            ? verifiedCourseAuth.isAdmin
+            : (launchInfo && launchInfo.isAdmin)
+        );
+        const logCourseId = (
+          verifiedCourseAuth
+            ? verifiedCourseAuth.courseId
+            : (launchInfo ? launchInfo.courseId : -1)
+        );
+        const logCourseName = (
+          (verifiedCourseAuth && verifiedCourseAuth.courseName !== undefined)
+            ? verifiedCourseAuth.courseName
+            : (launchInfo ? launchInfo.contextLabel : 'unknown')
+        );
+
         // Main log info
         const mainLogInfo: LogMainInfo = {
           id: `${launchInfo ? launchInfo.userId : 'unknown'}-${Date.now()}-${Math.floor(Math.random() * 100000)}-${Math.floor(Math.random() * 100000)}`,
@@ -650,11 +755,11 @@ const genRouteHandler = (
           userLastName: (launchInfo ? launchInfo.userLastName : 'unknown'),
           userEmail: (launchInfo ? launchInfo.userEmail : 'unknown'),
           userId: (launchInfo ? launchInfo.userId : -1),
-          isLearner: (launchInfo && !!launchInfo.isLearner),
-          isAdmin: (launchInfo && !!launchInfo.isAdmin),
-          isTTM: (launchInfo && !!launchInfo.isTTM),
-          courseId: (launchInfo ? launchInfo.courseId : -1),
-          courseName: (launchInfo ? launchInfo.contextLabel : 'unknown'),
+          isLearner: logIsLearner,
+          isAdmin: logIsAdmin,
+          isTTM: logIsTTM,
+          courseId: logCourseId,
+          courseName: logCourseName,
           browser,
           device,
           year,

@@ -1,4 +1,4 @@
-// Highest error code = DEK36
+// Highest error code = DEK40
 
 /**
  * List of error codes built into the express kit
@@ -14,6 +14,12 @@ enum ExpressKitErrorCode {
   InvalidParameter = 'DEK5',
   MissingParameter = 'DEK4',
   StudentIdMismatch = 'DEK36',
+
+  // Course context tokens (per-tab course authorization)
+  CourseContextNoSecret = 'DEK37',
+  CourseContextInvalid = 'DEK38',
+  CourseContextExpired = 'DEK39',
+  CourseContextUserMismatch = 'DEK40',
 
   // Server-to-server requests
   NotConnected = 'DEK14',
