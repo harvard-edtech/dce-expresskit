@@ -370,13 +370,24 @@ const genRouteHandler = (
     /* ------------- Launch Info ------------ */
     /*----------------------------------------*/
 
-    // Get launch info
-    const { launched, launchInfo } = getLaunchInfo(req);
+    // Get launch info. Public-tier routes (/api/public) are anonymous by
+    // definition: a live launched session must neither inject identity or
+    // roles into a public request nor block it via the course consistency
+    // check below (mirrors the /api/ttm and /api/admin path conventions)
+    const isPublicPath = req.path.startsWith('/api/public');
+    const { launched, launchInfo } = (
+      isPublicPath
+        ? { launched: false, launchInfo: undefined as any }
+        : getLaunchInfo(req)
+    );
     if (
       // Not launched
       (!launched || !launchInfo)
       // Not skipping the session check
       && !skipSessionCheck
+      // No verified per-request course auth (a verified auth is itself proof
+      // of a Canvas-verified launch and may outlive the shared session)
+      && !req.verifiedCourseAuth
     ) {
       return handleError(
         res,
@@ -432,6 +443,8 @@ const genRouteHandler = (
       )
       // Not skipping the session check
       && !skipSessionCheck
+      // No verified per-request course auth (see note above)
+      && !req.verifiedCourseAuth
     ) {
       return handleError(
         res,
@@ -517,12 +530,69 @@ const genRouteHandler = (
     });
 
     /*----------------------------------------*/
+    /* -------- Verified Course Auth --------- */
+    /*----------------------------------------*/
+
+    // If the consumer app attached an already-verified per-request course
+    // authorization (see types/VerifiedCourseAuth), trust it over the single
+    // shared session for this request's course, roles, and identity
+    if (req.verifiedCourseAuth) {
+      // Make sure students don't act as other students (mirrors the
+      // launchInfo-based check above, which cannot run when the session is
+      // gone and reflects another course's roles when the session holds a
+      // different course)
+      if (
+        req.verifiedCourseAuth.isLearner
+        && output.userId
+        && output.userId !== req.verifiedCourseAuth.userId
+      ) {
+        return handleError(
+          res,
+          {
+            message: 'We encountered a student ID mismatch. Please refresh or try the action again. Contact support if this issue persists.',
+            code: ExpressKitErrorCode.StudentIdMismatch,
+            status: 401,
+          },
+        );
+      }
+
+      // Course + role flags come from the verified (course-specific) auth
+      output.courseId = req.verifiedCourseAuth.courseId;
+      output.isLearner = req.verifiedCourseAuth.isLearner;
+      output.isTTM = req.verifiedCourseAuth.isTTM;
+      output.isAdmin = req.verifiedCourseAuth.isAdmin;
+
+      // Identity comes from the verified auth when the session cannot supply
+      // it (params still win, matching the launchInfo behavior above)
+      output.userId = (output.userId ?? req.verifiedCourseAuth.userId);
+      output.userFirstName = (
+        output.userFirstName
+        ?? req.verifiedCourseAuth.userFirstName
+      );
+      output.userLastName = (
+        output.userLastName
+        ?? req.verifiedCourseAuth.userLastName
+      );
+      output.userEmail = (
+        output.userEmail
+        ?? req.verifiedCourseAuth.userEmail
+      );
+      output.userAvatarURL = (
+        output.userAvatarURL
+        ?? 'http://www.gravatar.com/avatar/?d=identicon'
+      );
+    }
+
+    /*----------------------------------------*/
     /* ----- Require Course Consistency ----- */
     /*----------------------------------------*/
 
     // Make sure the user actually launched from the appropriate course
     if (
-      output.courseId
+      // No verified per-request course auth (a verified auth is itself
+      // proof the user launched this course)
+      !req.verifiedCourseAuth
+      && output.courseId
       && launchInfo
       && launchInfo.courseId
       && output.courseId !== launchInfo.courseId
