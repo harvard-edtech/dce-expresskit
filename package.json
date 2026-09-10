@@ -20,7 +20,7 @@
     "Toolkit"
   ],
   "dependencies": {
-    "dce-commonkit": "^5.0.2"
+    "dce-commonkit": "^5.0.3"
   },
   "peerDependencies": {
     "caccl": "^x.x.x",
