@@ -449,6 +449,11 @@ const genRouteHandler = (
         ? (output.userId ?? launchInfo.userId)
         : (output.userId ?? undefined)
     );
+    output.userHUID = (
+      launchInfo
+        ? (output.userHUID ?? launchInfo.userLoginId)
+        : (output.userHUID ?? undefined)
+    );
     output.userFirstName = (
       launchInfo
         ? launchInfo.userFirstName
