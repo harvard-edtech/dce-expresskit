@@ -62,6 +62,7 @@ import initExpressKitCollections, { getLogCollection } from './helpers/initExpre
 
 // Import types
 import CrossServerCredential from './types/CrossServerCredential';
+import VerifiedCourseAuth from './types/VerifiedCourseAuth';
 
 // Export each item
 export {
@@ -127,6 +128,7 @@ export {
   LogMetadataType,
   LogFunction,
   CrossServerCredential,
+  VerifiedCourseAuth,
   // Server types
   ParamType,
 };
