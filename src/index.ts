@@ -60,6 +60,9 @@ import addDBEditorEndpoints from './helpers/addDBEditorEndpoints';
 import visitEndpointOnAnotherServer from './helpers/visitEndpointOnAnotherServer';
 import initExpressKitCollections, { getLogCollection } from './helpers/initExpressKitCollections';
 
+// Import constants
+import ALARM_LOG_TAG from './constants/ALARM_LOG_TAG';
+
 // Import types
 import CrossServerCredential from './types/CrossServerCredential';
 
@@ -117,6 +120,8 @@ export {
   getLogCollection,
   addDBEditorEndpoints,
   visitEndpointOnAnotherServer,
+  // Constants
+  ALARM_LOG_TAG,
   // Types
   DayOfWeek,
   Log,

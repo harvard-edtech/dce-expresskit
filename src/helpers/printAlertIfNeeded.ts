@@ -1,39 +1,46 @@
 // Import dce-commonkit
-import {
-  Log,
-  LogType,
-  LogSource,
-  LogBuiltInMetadata,
-} from 'dce-commonkit';
+import { Log, LogType, LogSource } from 'dce-commonkit';
+
+// Import shared constants
+import ALARM_LOG_TAG from '../constants/ALARM_LOG_TAG';
 
 // Max length of the error message to include
 const MAX_MESSAGE_LENGTH = 300;
 
 /**
- * Print a single-line JSON alert to the console if a log needs the team's
- *   attention. caccl-deploy alarms on any app output line with
+ * Print a single-line JSON alert to the console if a log was tagged with
+ *   ALARM_LOG_TAG. caccl-deploy alarms on any app output line with
  *   "cacclDeployAlert": true and notifies the team (email/Slack).
- *   Only client fatal errors are printed: server failures are already caught
- *   by caccl-deploy's 5xx alarm on the load balancer.
+ *   Alerts are opt-in: untagged logs never print (server 5xx responses are
+ *   already caught by caccl-deploy's 5xx alarm on the load balancer)
  * @author Yuen Ler Chow
  * @param log the log that was created
  */
 const printAlertIfNeeded = (log: Log) => {
   try {
-    if (
-      log.type !== LogType.Error
-      || log.source !== LogSource.Client
-      || log.context !== LogBuiltInMetadata.Context.ClientFatalError
-    ) {
+    if (!Array.isArray(log.tags) || !log.tags.includes(ALARM_LOG_TAG)) {
       return;
     }
 
     // eslint-disable-next-line no-console
     console.error(JSON.stringify({
       cacclDeployAlert: true,
-      reason: 'ClientFatalError',
-      errorCode: log.errorCode,
-      errorMessage: String(log.errorMessage).substring(0, MAX_MESSAGE_LENGTH),
+      source: log.source,
+      context: log.context,
+      subcontext: log.subcontext,
+      ...(
+        log.type === LogType.Error
+          ? {
+            errorCode: log.errorCode,
+            errorMessage: String(log.errorMessage).substring(0, MAX_MESSAGE_LENGTH),
+          }
+          : {}
+      ),
+      ...(
+        log.source === LogSource.Server
+          ? { route: log.routeTemplate }
+          : {}
+      ),
       logId: log.id,
       courseId: log.courseId,
       userId: log.userId,
