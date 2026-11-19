@@ -31,6 +31,7 @@ import genErrorPage from '../html/genErrorPage';
 import genInfoPage from '../html/genInfoPage';
 import parseUserAgent from './parseUserAgent';
 import { validateSignedRequest } from './dataSigner';
+import printAlertIfNeeded from './printAlertIfNeeded';
 
 /**
  * Generate an express API route handler
@@ -726,6 +727,10 @@ const genRouteHandler = (
           ...typeSpecificInfo,
           ...sourceSpecificInfo,
         };
+
+        // Alert the team if needed (before storing, so the alert still goes
+        // out if the db is unavailable)
+        printAlertIfNeeded(log);
 
         // Either print to console or save to db
         const logCollection = await internalGetLogCollection();
