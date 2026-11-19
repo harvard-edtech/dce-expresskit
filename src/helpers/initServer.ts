@@ -15,6 +15,7 @@ import {
 // Import shared helpers
 import genRouteHandler from './genRouteHandler';
 import getLogReviewerLogs from './getLogReviewerLogs';
+import { initErrorNotifier, ErrorNotifierOpts } from './errorNotifier';
 
 // Import shared types
 import ExpressKitErrorCode from '../types/ExpressKitErrorCode';
@@ -35,12 +36,22 @@ import {
  * @param opts object containing all arguments
  * @param opts.app express app from inside of the postprocessor function that
  *   we will add routes to
+ * @param [opts.errorNotifier] if included, the app is notified about errors
+ *   that need attention: server errors (except ones that sent the user a 4xx)
+ *   and client fatal errors
  */
 const initServer = (
   opts: {
     app: express.Application,
+    errorNotifier?: ErrorNotifierOpts,
   },
 ) => {
+  /*----------------------------------------*/
+  /*          Error Notifications           */
+  /*----------------------------------------*/
+
+  initErrorNotifier(opts.errorNotifier);
+
   /*----------------------------------------*/
   /*                Logging                 */
   /*----------------------------------------*/

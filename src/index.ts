@@ -59,6 +59,11 @@ import handleSuccess from './helpers/handleSuccess';
 import addDBEditorEndpoints from './helpers/addDBEditorEndpoints';
 import visitEndpointOnAnotherServer from './helpers/visitEndpointOnAnotherServer';
 import initExpressKitCollections, { getLogCollection } from './helpers/initExpressKitCollections';
+import {
+  notifyByDefault,
+  ErrorNotification,
+  ErrorNotifierOpts,
+} from './helpers/errorNotifier';
 
 // Import types
 import CrossServerCredential from './types/CrossServerCredential';
@@ -117,6 +122,7 @@ export {
   getLogCollection,
   addDBEditorEndpoints,
   visitEndpointOnAnotherServer,
+  notifyByDefault,
   // Types
   DayOfWeek,
   Log,
@@ -127,6 +133,8 @@ export {
   LogMetadataType,
   LogFunction,
   CrossServerCredential,
+  ErrorNotification,
+  ErrorNotifierOpts,
   // Server types
   ParamType,
 };

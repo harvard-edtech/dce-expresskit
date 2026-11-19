@@ -31,6 +31,7 @@ import genErrorPage from '../html/genErrorPage';
 import genInfoPage from '../html/genInfoPage';
 import parseUserAgent from './parseUserAgent';
 import { validateSignedRequest } from './dataSigner';
+import { handleErrorLog } from './errorNotifier';
 
 /**
  * Generate an express API route handler
@@ -625,8 +626,14 @@ const genRouteHandler = (
     /**
      * Log an event on the server
      * @author Gabe Abrams
+     * @param logOpts log info
+     * @param [httpStatus] internal only: http status that was sent to the
+     *   user if this error ended the request (used for error notifications)
      */
-    const logServerEvent: LogFunction = async (logOpts) => {
+    const logServerEvent = async (
+      logOpts: Parameters<LogFunction>[0],
+      httpStatus?: number,
+    ): Promise<Log> => {
       // NOTE: internally, we slip through an opts.overrideAsClientEvent boolean
       // that indicates that this is actually a client event, but we don't
       // include that in the LogFunction type because this is internal and
@@ -726,6 +733,10 @@ const genRouteHandler = (
           ...typeSpecificInfo,
           ...sourceSpecificInfo,
         };
+
+        // Notify the app before storing, so notifications still go out if
+        // the db is unavailable
+        handleErrorLog(log, httpStatus);
 
         // Either print to console or save to db
         const logCollection = await internalGetLogCollection();
@@ -869,20 +880,23 @@ const genRouteHandler = (
       if (renderOpts.title?.toLowerCase().includes('session expired')) {
         return;
       }
-      logServerEvent({
-        context: LogBuiltInMetadata.Context.ServerRenderedErrorPage,
-        error: {
-          message: `${renderOpts.title}: ${renderOpts.description}`,
-          code: renderOpts.code,
+      logServerEvent(
+        {
+          context: LogBuiltInMetadata.Context.ServerRenderedErrorPage,
+          error: {
+            message: `${renderOpts.title}: ${renderOpts.description}`,
+            code: renderOpts.code,
+          },
+          metadata: {
+            title: renderOpts.title,
+            description: renderOpts.description,
+            code: renderOpts.code,
+            pageTitle: renderOpts.pageTitle,
+            status: renderOpts.status ?? 500,
+          },
         },
-        metadata: {
-          title: renderOpts.title,
-          description: renderOpts.description,
-          code: renderOpts.code,
-          pageTitle: renderOpts.pageTitle,
-          status: renderOpts.status ?? 500,
-        },
-      });
+        renderOpts.status ?? 500,
+      );
     };
 
     /**
@@ -954,11 +968,14 @@ const genRouteHandler = (
       if (!responseSent) {
         handleError(res, err);
 
-        // Log server-side error
-        logServerEvent({
-          context: LogBuiltInMetadata.Context.ServerEndpointError,
-          error: err,
-        });
+        // Log server-side error (handleError uses the same status)
+        logServerEvent(
+          {
+            context: LogBuiltInMetadata.Context.ServerEndpointError,
+            error: err,
+          },
+          ((err as any)?.status || 500),
+        );
 
         return;
       }
